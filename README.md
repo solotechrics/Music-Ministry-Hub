@@ -13,9 +13,8 @@ Week 1: Songs CRUD (create, list, get one, update, delete). More coming in Weeks
 2. Clone the repo and run `npm install`.
 3. Copy `.env.example` to `.env` and set `MONGODB_URI` to your own connection string.
 4. Seed sample data with `npm run seed`.
-5. Start the server with `npm run dev`. The API runs on `http://localhost:3000/api`.
+5. Start the server with `npm run dev`. The API runs on `http://localhost:3006/api`.
 
-> Update these steps so they match your actual scripts and file names.
 
 ## Endpoints (Week 1)
 | Method | Path | Purpose |
@@ -33,6 +32,3 @@ Full details: `/docs/data-model-and-api-spec.md`
 - `/docs/work-plan.md`
 - `/docs/data-model-and-api-spec.md`
 - `/docs/erd.dbml` and `erd.png`
-
-## Notes
-Dummy data only. No real personal data or passwords. Never commit your real `.env`.
