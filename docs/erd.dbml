@@ -1,0 +1,91 @@
+// Logical ERD. In MongoDB, "service_songs" is stored as an embedded array inside services.
+
+Enum member_role {
+  director
+  member
+}
+
+Enum member_type {
+  chorister
+  instrumentalist
+}
+
+Enum assignment_type {
+  sight_singing
+  sight_reading
+  by_ear
+}
+
+Enum assignment_audience {
+  choristers
+  instrumentalists
+  all
+}
+
+Table members {
+  _id objectid [pk]
+  fullName varchar [not null]
+  email varchar [not null, unique]
+  role member_role [not null, default: 'member']
+  memberType member_type [not null]
+  part varchar
+  createdAt timestamp
+}
+
+Table songs {
+  _id objectid [pk]
+  title varchar [not null]
+  composer varchar
+  musicalKey varchar [not null]
+  tempoBpm integer
+  referenceLink varchar
+  notes text
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table services {
+  _id objectid [pk]
+  serviceDate date [not null]
+  title varchar
+  notes text
+}
+
+Table service_songs {
+  service objectid [not null]
+  song objectid [not null]
+  position integer
+  Note: 'Embedded in services.songs in MongoDB'
+}
+
+Table assignments {
+  _id objectid [pk]
+  song objectid [not null]
+  createdBy objectid [not null]
+  title varchar [not null]
+  type assignment_type [not null]
+  audience assignment_audience [not null]
+  instructions text [not null]
+  tutorialLink varchar
+  deadline timestamp [not null]
+  createdAt timestamp
+}
+
+Table submissions {
+  _id objectid [pk]
+  assignment objectid [not null]
+  member objectid [not null]
+  link varchar
+  note text
+  submittedAt timestamp
+  indexes {
+    (assignment, member) [unique]
+  }
+}
+
+Ref: service_songs.service > services._id
+Ref: service_songs.song > songs._id
+Ref: assignments.song > songs._id
+Ref: assignments.createdBy > members._id
+Ref: submissions.assignment > assignments._id
+Ref: submissions.member > members._id
