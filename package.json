@@ -11,6 +11,7 @@
   },
   "dev": "nodemon server.js",
   "start": "node server.js",
+  "seed": "node seed.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/solotechrics/Music-Ministry-Hub.git"
