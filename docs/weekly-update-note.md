@@ -1,19 +1,19 @@
-Week 1 - Oluwasegun Opeyemi Solomon - Backend - Music Ministry Hub
+Week 1 - Backend - Music Ministry Hub
 
 Delivered:
-- Idea one-pager: <link to /docs/idea-one-pager.md>
-- Work plan: <link to /docs/work-plan.md>
-- Task 1.1 ERD and API spec: <link to /docs/data-model-and-api-spec.md and erd.png>
-- Task 1.2 Songs CRUD (create, list, get one, update, delete) with validation and seed data: <repo link>, tag week-1
-- Sample requests: <link to Postman collection or .http file>
+- Idea one-pager and work plan: /docs in the repo
+- Task 1.1 ERD and API spec: /docs/data-model-and-api-spec.md and /docs/erd.png
+- Task 1.2 Songs CRUD (create, list, get one, update, delete) with validation, error handling and seed data: https://github.com/solotechrics/Music-Ministry-Hub, tag week-1
+- Sample requests: requests.http in the repo root
+- Drive folder: [[Drive link](https://drive.google.com/drive/folders/1f7mEpJ8Sfc-eHmBhHJoXYLzWrrRdNCsR?usp=drive_link)]
 
 Changed after feedback: Not applicable (Week 1).
 
 Key technical decisions:
-- MongoDB with Mongoose: quick to set up, schemas and validation in code. Collections link to each other with ObjectId references; setlist songs are embedded inside the service.
+- MongoDB with Mongoose. Collections link with ObjectId references; setlist songs are embedded inside the service.
 - Submissions use links or notes, not file uploads, to keep the API light.
-- Songs chosen as the main entity for Week 1; assignments and submissions follow in Week 2.
+- Songs is the main entity for Week 1; assignments and submissions follow in Week 2.
 
-Blockers / risks: <write honestly, e.g. time, database setup>
+Blockers / risks: [Blockers / risks: I started Week 1 late, so I had limited time to test. I also spent time on database setup and fixing project scripts. Main risk for Week 2 is the size of the scope (auth, assignments, submissions) while still learning backend. I plan to build in priority order and ask mentors for help early.]
 
-AI and sources used: Claude (AI assistant) was used to refine the idea scope and draft the one-pager, work plan, spec and README templates, which I reviewed and edited. <State here what you used AI for in the code, if anything, and what you changed.>
+AI and sources used: Claude (AI assistant) was used to refine the idea scope, plan the entities and folder structure, draft the documents, and write the Songs CRUD code (model, routes, error handling, seed script). I reviewed the code and [tested it / am still testing it].
