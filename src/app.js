@@ -1,3 +1,5 @@
+"use strict";
+
 const express = require("express");
 const songRoutes = require("./routes/songs");
 const { notFound, errorHandler } = require("./middleware/errorHandler");

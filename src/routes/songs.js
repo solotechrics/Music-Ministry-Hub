@@ -1,3 +1,5 @@
+"use strict";
+
 const express = require("express");
 const mongoose = require("mongoose");
 const Song = require("../models/Song");
@@ -13,7 +15,7 @@ const ALLOWED_FIELDS = [
     "notes",
 ];
 
-function pickFields(body) {
+const pickFields = function (body) {
     const data = {};
     for (const field of ALLOWED_FIELDS) {
         if (body && body[field] !== undefined) {
@@ -21,13 +23,13 @@ function pickFields(body) {
         }
     }
     return data;
-}
+};
 
-function sendNotFound(res) {
+const sendNotFound = function (res) {
     return res.status(404).json({
         error: { code: "NOT_FOUND", message: "Song not found" },
     });
-}
+};
 
 router.param("id", (req, res, next, id) => {
     if (!mongoose.isObjectIdOrHexString(id)) {

@@ -1,10 +1,12 @@
-function notFound(req, res) {
+"use strict";
+
+const notFound = function (req, res) {
     res.status(404).json({
         error: { code: "NOT_FOUND", message: "Route not found" },
     });
-}
+};
 
-function errorHandler(err, req, res, next) {
+const errorHandler = function (err, req, res, next) {
     if (err.name === "ValidationError") {
         const message = Object.values(err.errors)
             .map((e) =>
@@ -40,6 +42,6 @@ function errorHandler(err, req, res, next) {
     res.status(500).json({
         error: { code: "SERVER_ERROR", message: "Something went wrong" },
     });
-}
+};
 
 module.exports = { notFound, errorHandler };

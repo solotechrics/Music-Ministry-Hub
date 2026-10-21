@@ -1,15 +1,17 @@
+"use strict";
+
 const mongoose = require("mongoose");
 
 const KEY_PATTERN = /^[A-G][#b]?m?$/;
 
-function isValidUrl(value) {
+const isValidUrl = function (value) {
     try {
         const url = new URL(value);
         return url.protocol === "http:" || url.protocol === "https:";
     } catch {
         return false;
     }
-}
+};
 
 const songSchema = new mongoose.Schema(
     {

@@ -1,6 +1,8 @@
+"use strict";
+
 const mongoose = require("mongoose");
 
-async function connectDB() {
+const connectDB = async function () {
     const uri = process.env.MONGODB_URI;
 
     if (!uri) {
@@ -15,6 +17,6 @@ async function connectDB() {
         console.error("MongoDB connection failed:", err.message);
         process.exit(1);
     }
-}
+};
 
 module.exports = connectDB;
