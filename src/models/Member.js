@@ -3,7 +3,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const KEY_PATTERN = /^[A-G][#b]?m?$/;
+const emailValidation = /^\S+@\S+\.\S+$/;
 const memberSchema = new mongoose.Schema(
     {
         fullName: {
@@ -18,8 +18,8 @@ const memberSchema = new mongoose.Schema(
             required: [true, "email is required"],
             lowercase: true,
             unique: true,
-            trim: ture,
-            match: [KEY_PATTERN, "email is not valid"],
+            trim: true,
+            match: [emailValidation, "email is not valid"],
         },
 
         password: {
@@ -60,16 +60,10 @@ const memberSchema = new mongoose.Schema(
 
 memberSchema.pre("save", async function () {
     if (!this.isModified("password")) return;
-
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
-    }
+    this.password = await bcrypt.hash(this.password, 10);
 });
-memberSchema.method.comparePassword = function (plainPassword) {
+
+memberSchema.methods.comparePassword = function (plainPassword) {
     return bcrypt.compare(plainPassword, this.password);
 };
 
