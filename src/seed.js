@@ -1,8 +1,11 @@
+"use strict";
+
 require("dotenv").config();
 
 const mongoose = require("mongoose");
 const connectDB = require("./config/db");
 const Song = require("./models/Song");
+const Member = require("./models/Member");
 
 const songs = [
     {
@@ -36,11 +39,35 @@ const songs = [
     },
 ];
 
+const members = [
+    {
+        fullName: "Director One",
+        email: "director@example.com",
+        password: "Password123",
+        role: "director",
+        memberType: "instrumentalist",
+        part: "keyboard",
+    },
+    {
+        fullName: "Member One",
+        email: "member@example.com",
+        password: "Password123",
+        memberType: "chorister",
+        part: "alto",
+    },
+];
+
 async function seed() {
     await connectDB();
+
     await Song.deleteMany({});
-    const created = await Song.insertMany(songs);
-    console.log(`Seeded ${created.length} songs`);
+    const createdSongs = await Song.insertMany(songs);
+    console.log(`Seeded ${createdSongs.length} songs`);
+
+    await Member.deleteMany({});
+    await Member.create(members);
+    console.log(`Seeded ${members.length} members`);
+
     await mongoose.disconnect();
 }
 

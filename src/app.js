@@ -2,6 +2,7 @@
 
 const express = require("express");
 const songRoutes = require("./routes/songs");
+const authRoutes = require("./routes/auth");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
@@ -13,6 +14,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/songs", songRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

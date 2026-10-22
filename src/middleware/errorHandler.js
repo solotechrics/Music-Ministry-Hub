@@ -38,6 +38,16 @@ const errorHandler = function (err, req, res, next) {
         });
     }
 
+    if (err.code === 11000) {
+        const field = Object.keys(err.keyPattern || {}).join(", ");
+        return res.status(409).json({
+            error: {
+                code: "DUPLICATE",
+                message: `A record with this ${field} already exists`,
+            },
+        });
+    }
+
     console.error(err);
     res.status(500).json({
         error: { code: "SERVER_ERROR", message: "Something went wrong" },
