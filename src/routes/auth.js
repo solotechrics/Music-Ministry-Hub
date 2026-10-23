@@ -3,6 +3,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const Member = require("../models/Member");
+const { authenticate } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 const ALLOWED_FIELDS = ["fullName", "email", "password", "memberType", "part"];
@@ -69,5 +70,9 @@ router.post("/login", async (req, res) => {
 
     res.status(200).json({ token, member });
 });
+
+  router.get("/me", authenticate, (req, res) =>
+      res.status(200).json(req.member),
+  );
 
 module.exports = router;
