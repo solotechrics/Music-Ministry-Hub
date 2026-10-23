@@ -3,6 +3,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const Song = require("../models/Song");
+const Assignment = require("../models/Assignment");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -56,6 +57,14 @@ router.get("/:id", async (req, res) => {
     const song = await Song.findById(req.params.id);
     if (!song) return sendNotFound(res);
     res.status(200).json(song);
+});
+
+router.get("/:id/assignments", async (req, res) => {
+    const song = await Song.findById(req.params.id);
+    if (!song) return sendNotFound(res);
+
+    const assignments = await Assignment.find({ song: req.params.id });
+    res.status(200).json(assignments);
 });
 
 router.put("/:id", authorize("director"), async (req, res) => {
