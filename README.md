@@ -4,7 +4,7 @@ An API for a church music ministry. Directors manage songs, post practice assign
 
 ## Stack
 
-Node.js, Express, MongoDB (Mongoose)
+Node.js, Express, MongoDB (Mongoose), Zod
 
 ## Status
 
@@ -55,3 +55,4 @@ Full details: `/docs/data-model-and-api-spec.md`
 | 5 | Mongoose 9 sign-up hook error | The next callback in a pre-save hook was unsupported. | Replaced it with an async hook without `next`. |
 | 6 | Assignment ownership | A second director could edit another director’s assignment. | Checked that `createdBy` matches the logged-in director for update and delete. |
 | 7 | Duplicate submissions | A member could submit twice to the same assignment. | Added a unique index on `assignment` and `member`; the error handler returns 409. |
+| 8 | Input was validated only by Mongoose. Added Zod schemas at the API boundary on every input, so bad requests are rejected early, and unknown fields are dropped. | Validation previously happened at the database layer. | Added Zod validation middleware before route handlers. |

@@ -16,4 +16,4 @@ Key technical decisions:
 
 Blockers / risks: [Blockers / risks: I started Week 1 late, so I had limited time to test. I also spent time on database setup and fixing project scripts. Main risk for Week 2 is the size of the scope (auth, assignments, submissions) while still learning backend. I plan to build in priority order and ask mentors for help early.]
 
-AI and sources used: Claude (AI assistant) was used to refine the idea scope, plan the entities and folder structure, draft the documents, and write the Songs CRUD code (model, routes, error handling, seed script). I reviewed the code and [tested it / am still testing it].
+AI and sources used: Claude was used to refine the idea scope, plan the entities and folder structure, draft the documents, and write the Songs CRUD code (model, routes, error handling, seed script). OpenAI Codex was used to implement and edit the authentication, assignment, submission, and Zod validation code, update the seed data and README, and run the API checks. I reviewed the code and tested it.
