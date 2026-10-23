@@ -3,6 +3,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const Submission = require("../models/Submission");
+const Assignment = require("../models/Assignment");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
 const { validate } = require("../middleware/validate");
 const { submissionUpdateSchema } = require("../validators/schemas");
@@ -43,6 +44,23 @@ router.get("/mine", authorize("member"), async (req, res) => {
     res.status(200).json(submissions);
 });
 
+router.get("/:id", authorize("member"), async (req, res) => {
+    const submission = await Submission.findById(req.params.id).populate(
+        "assignment",
+        "title deadline",
+    );
+    if (!submission) return sendNotFound(res);
+    if (!submission.member.equals(req.member._id)) {
+        return res.status(403).json({
+            error: {
+                code: "FORBIDDEN",
+                message: "You can only view your own submissions",
+            },
+        });
+    }
+    res.status(200).json(submission);
+});
+
 router.put(
     "/:id",
     authorize("member"),
@@ -59,7 +77,15 @@ router.put(
         });
     }
 
+    const assignment = await Assignment.findById(submission.assignment);
+    if (!assignment) {
+        return res.status(404).json({
+            error: { code: "NOT_FOUND", message: "Assignment not found" },
+        });
+    }
+
     submission.set(pickFields(req.body));
+    submission.isLate = new Date() > assignment.deadline;
     await submission.save();
     res.status(200).json(submission);
     },
