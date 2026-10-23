@@ -6,6 +6,12 @@ const Assignment = require("../models/Assignment");
 const Song = require("../models/Song");
 const Submission = require("../models/Submission");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
+const { validate } = require("../middleware/validate");
+const {
+    assignmentCreateSchema,
+    assignmentUpdateSchema,
+    submissionCreateSchema,
+} = require("../validators/schemas");
 
 const router = express.Router();
 router.use(authenticate);
@@ -45,7 +51,11 @@ router.param("id", (req, res, next, id) => {
     next();
 });
 
-router.post("/:id/submissions", authorize("member"), async (req, res) => {
+router.post(
+    "/:id/submissions",
+    authorize("member"),
+    validate(submissionCreateSchema),
+    async (req, res) => {
     const assignment = await Assignment.findById(req.params.id);
     if (!assignment) return sendNotFound(res);
 
@@ -71,7 +81,8 @@ router.post("/:id/submissions", authorize("member"), async (req, res) => {
         isLate: new Date() > assignment.deadline,
     });
     res.status(201).json(submission);
-});
+    },
+);
 
 router.get("/:id/submissions", authorize("director"), async (req, res) => {
     const assignment = await Assignment.findById(req.params.id);
@@ -84,7 +95,11 @@ router.get("/:id/submissions", authorize("director"), async (req, res) => {
     res.status(200).json(submissions);
 });
 
-router.post("/", authorize("director"), async (req, res) => {
+router.post(
+    "/",
+    authorize("director"),
+    validate(assignmentCreateSchema),
+    async (req, res) => {
     const data = pickFields(req.body);
     const song = await Song.findById(data.song);
     if (!song) {
@@ -98,7 +113,8 @@ router.post("/", authorize("director"), async (req, res) => {
         createdBy: req.member._id,
     });
     res.status(201).json(assignment);
-});
+    },
+);
 
 router.get("/", async (req, res) => {
     const assignments = await Assignment.find()
@@ -116,7 +132,11 @@ router.get("/:id", async (req, res) => {
     res.status(200).json(assignment);
 });
 
-router.put("/:id", authorize("director"), async (req, res) => {
+router.put(
+    "/:id",
+    authorize("director"),
+    validate(assignmentUpdateSchema),
+    async (req, res) => {
     const assignment = await Assignment.findById(req.params.id);
     if (!assignment) return sendNotFound(res);
 
@@ -134,7 +154,8 @@ router.put("/:id", authorize("director"), async (req, res) => {
     assignment.set(data);
     await assignment.save();
     res.status(200).json(assignment);
-});
+    },
+);
 
 router.delete("/:id", authorize("director"), async (req, res) => {
     const assignment = await Assignment.findById(req.params.id);

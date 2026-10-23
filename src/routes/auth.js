@@ -4,6 +4,8 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const Member = require("../models/Member");
 const { authenticate } = require("../middleware/authMiddleware");
+const { validate } = require("../middleware/validate");
+const { signupSchema, loginSchema } = require("../validators/schemas");
 const router = express.Router();
 
 const ALLOWED_FIELDS = ["fullName", "email", "password", "memberType", "part"];
@@ -37,13 +39,13 @@ const invalidCredentials = function (res) {
 };
 
 // My signup route
-router.post("/signup", async (req, res) => {
+router.post("/signup", validate(signupSchema), async (req, res) => {
     const member = await Member.create(pickFields(req.body));
     res.status(201).json(member);
 });
 
 // My login route
-router.post("/login", async (req, res) => {
+router.post("/login", validate(loginSchema), async (req, res) => {
     const { email, password } = req.body || {};
     if (
         !email ||

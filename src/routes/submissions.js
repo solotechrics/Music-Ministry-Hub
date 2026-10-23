@@ -4,6 +4,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const Submission = require("../models/Submission");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
+const { validate } = require("../middleware/validate");
+const { submissionUpdateSchema } = require("../validators/schemas");
 
 const router = express.Router();
 router.use(authenticate);
@@ -41,7 +43,11 @@ router.get("/mine", authorize("member"), async (req, res) => {
     res.status(200).json(submissions);
 });
 
-router.put("/:id", authorize("member"), async (req, res) => {
+router.put(
+    "/:id",
+    authorize("member"),
+    validate(submissionUpdateSchema),
+    async (req, res) => {
     const submission = await Submission.findById(req.params.id);
     if (!submission) return sendNotFound(res);
     if (!submission.member.equals(req.member._id)) {
@@ -56,7 +62,8 @@ router.put("/:id", authorize("member"), async (req, res) => {
     submission.set(pickFields(req.body));
     await submission.save();
     res.status(200).json(submission);
-});
+    },
+);
 
 router.delete("/:id", authorize("member"), async (req, res) => {
     const submission = await Submission.findById(req.params.id);
