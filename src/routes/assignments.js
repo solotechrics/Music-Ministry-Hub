@@ -4,6 +4,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const Assignment = require("../models/Assignment");
 const Song = require("../models/Song");
+const Submission = require("../models/Submission");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -42,6 +43,45 @@ router.param("id", (req, res, next, id) => {
         });
     }
     next();
+});
+
+router.post("/:id/submissions", authorize("member"), async (req, res) => {
+    const assignment = await Assignment.findById(req.params.id);
+    if (!assignment) return sendNotFound(res);
+
+    const memberType = req.member.memberType;
+    if (
+        (assignment.audience === "choristers" && memberType !== "chorister") ||
+        (assignment.audience === "instrumentalists" &&
+            memberType !== "instrumentalist")
+    ) {
+        return res.status(403).json({
+            error: {
+                code: "FORBIDDEN",
+                message: "This assignment is not for your group",
+            },
+        });
+    }
+
+    const submission = await Submission.create({
+        assignment: req.params.id,
+        member: req.member._id,
+        link: req.body && req.body.link,
+        note: req.body && req.body.note,
+        isLate: new Date() > assignment.deadline,
+    });
+    res.status(201).json(submission);
+});
+
+router.get("/:id/submissions", authorize("director"), async (req, res) => {
+    const assignment = await Assignment.findById(req.params.id);
+    if (!assignment) return sendNotFound(res);
+
+    const submissions = await Submission.find({ assignment: req.params.id }).populate(
+        "member",
+        "fullName memberType part",
+    );
+    res.status(200).json(submissions);
 });
 
 router.post("/", authorize("director"), async (req, res) => {
