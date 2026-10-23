@@ -88,8 +88,20 @@ router.put(
 );
 
 router.delete("/:id", authorize("director"), async (req, res) => {
-    const song = await Song.findByIdAndDelete(req.params.id);
+    const song = await Song.findById(req.params.id);
     if (!song) return sendNotFound(res);
+
+    const inUse = await Assignment.countDocuments({ song: req.params.id });
+    if (inUse > 0) {
+        return res.status(409).json({
+            error: {
+                code: "CONFLICT",
+                message: "Cannot delete a song that still has assignments",
+            },
+        });
+    }
+
+    await song.deleteOne();
     res.status(200).json({ message: "Song deleted" });
 });
 
