@@ -7,6 +7,7 @@ const connectDB = require("./config/db");
 const Song = require("./models/Song");
 const Member = require("./models/Member");
 const Assignment = require("./models/Assignment");
+const Submission = require("./models/Submission");
 
 const songs = [
     {
@@ -64,11 +65,19 @@ const members = [
         memberType: "instrumentalist",
         part: "piano",
     },
+    {
+        fullName: "Member Two",
+        email: "member2@example.com",
+        password: "Password123",
+        memberType: "instrumentalist",
+        part: "guitar",
+    },
 ];
 
 async function seed() {
     await connectDB();
 
+    await Submission.deleteMany({});
     await Assignment.deleteMany({});
     await Song.deleteMany({});
     const createdSongs = await Song.insertMany(songs);

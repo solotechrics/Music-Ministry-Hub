@@ -8,7 +8,7 @@ Node.js, Express, MongoDB (Mongoose)
 
 ## Status
 
-Week 1: Songs CRUD (create, list, get one, update, delete). More coming in Weeks 2 and 3.
+Week 1: Songs CRUD (create, list, get one, update, delete). Week 2: authentication, assignments, and submissions.
 
 ## How to run (local)
 
@@ -18,7 +18,7 @@ Week 1: Songs CRUD (create, list, get one, update, delete). More coming in Weeks
 4. Seed sample data with `npm run seed`.
 5. Start the server with `npm run dev`. The API runs on `http://localhost:3006/api`.
 
-## Endpoints (Week 1)
+## Endpoints
 
 | Method | Path           | Purpose       |
 | ------ | -------------- | ------------- |
@@ -27,6 +27,13 @@ Week 1: Songs CRUD (create, list, get one, update, delete). More coming in Weeks
 | GET    | /api/songs/:id | Get one song  |
 | PUT    | /api/songs/:id | Update a song |
 | DELETE | /api/songs/:id | Delete a song |
+| GET | /api/songs/:id/assignments | List a song's assignments |
+| GET, POST | /api/assignments | List or create assignments |
+| GET, PUT, DELETE | /api/assignments/:id | Read or manage an assignment |
+| POST | /api/assignments/:id/submissions | Submit work for an assignment |
+| GET | /api/assignments/:id/submissions | List an assignment's submissions (director) |
+| GET | /api/submissions/mine | List the logged-in member's submissions |
+| PUT, DELETE | /api/submissions/:id | Update or delete an owned submission |
 
 Full details: `/docs/data-model-and-api-spec.md`
 
@@ -39,13 +46,12 @@ Full details: `/docs/data-model-and-api-spec.md`
 
 ## Issue Log week 2
 
-| #   | Issue                                                                                                                                 | What happened                                                                                                                                          | Options considered                              | Fix                                                                       |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- | ------------------------------------------------------------------------- |
-| 1   | npm scripts did not run                                                                                                               | `npm run seed` and `npm run dev` failed with "Cannot find module" because the scripts were outside the `scripts` block and pointed to the project root | Move files to the root, or fix the script paths | Moved `dev`, `start` and `seed` into `scripts` and pointed them to `src/` |
-| 2   | Invalid JSON in Postman                                                                                                               | A PUT request returned 400 INVALID_JSON because the body had a missing key name and a trailing comma                                                   | Ignore the error, or fix the body               | Fixed the JSON; the error handler returned a clean 400 as designed        |
-| 3   | Postman base URL confusion                                                                                                            | `baseUrl` existed in both the collection and the environment, no environment was selected, and the value was missing `/api`                            | Keep both, or keep one                          | Kept one environment variable with `/api` and selected the environment    |
-| 4   | Week 1 update note sent with placeholders                                                                                             | The note was submitted before the links and blockers were filled in                                                                                    | Ignore it, or send a correction                 | Sent a corrected update note                                              |
-| 5   | Changed all my functions to function expression                                                                                       |
-| 6   | Sign-up would crash: the next callback in the pre-save hook is not supported in Mongoose 9. Fixed by using an async hook without next |
-
-| 7 | - Assignments needed an owner check beyond the role check. A second director could edit another director’s assignment. Fixed by comparing `createdBy` with the logged-in director’s id for update and delete operations. |
+| # | Issue | What happened | Fix |
+| --- | --- | --- | --- |
+| 1 | npm scripts did not run | `npm run seed` and `npm run dev` could not find their entry points. | Pointed the scripts to files in `src/`. |
+| 2 | Invalid JSON in Postman | A PUT body had a missing key name and trailing comma. | Fixed the JSON; the error handler returned 400 as designed. |
+| 3 | Postman base URL confusion | The environment was not selected and `baseUrl` lacked `/api`. | Selected the correct environment and set `baseUrl` to include `/api`. |
+| 4 | Week 1 update note contained placeholders | The note was submitted before the links and blockers were filled in. | Sent a corrected update note. |
+| 5 | Mongoose 9 sign-up hook error | The next callback in a pre-save hook was unsupported. | Replaced it with an async hook without `next`. |
+| 6 | Assignment ownership | A second director could edit another director’s assignment. | Checked that `createdBy` matches the logged-in director for update and delete. |
+| 7 | Duplicate submissions | A member could submit twice to the same assignment. | Added a unique index on `assignment` and `member`; the error handler returns 409. |
