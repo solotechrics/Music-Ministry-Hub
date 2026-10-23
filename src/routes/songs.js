@@ -3,8 +3,10 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const Song = require("../models/Song");
+const { authenticate, authorize } = require("../middleware/authMiddleware");
 
 const router = express.Router();
+router.use(authenticate);
 
 const ALLOWED_FIELDS = [
     "title",
@@ -40,7 +42,7 @@ router.param("id", (req, res, next, id) => {
     next();
 });
 
-router.post("/", async (req, res) => {
+router.post("/", authorize("director"), async (req, res) => {
     const song = await Song.create(pickFields(req.body));
     res.status(201).json(song);
 });
@@ -56,7 +58,7 @@ router.get("/:id", async (req, res) => {
     res.status(200).json(song);
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", authorize("director"), async (req, res) => {
     const data = pickFields(req.body);
 
     await new Song(data).validate();
@@ -69,7 +71,7 @@ router.put("/:id", async (req, res) => {
     res.status(200).json(song);
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authorize("director"), async (req, res) => {
     const song = await Song.findByIdAndDelete(req.params.id);
     if (!song) return sendNotFound(res);
     res.status(200).json({ message: "Song deleted" });
