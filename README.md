@@ -47,3 +47,5 @@ Full details: `/docs/data-model-and-api-spec.md`
 | 4   | Week 1 update note sent with placeholders                                                                                             | The note was submitted before the links and blockers were filled in                                                                                    | Ignore it, or send a correction                 | Sent a corrected update note                                              |
 | 5   | Changed all my functions to function expression                                                                                       |
 | 6   | Sign-up would crash: the next callback in the pre-save hook is not supported in Mongoose 9. Fixed by using an async hook without next |
+
+| 7 | - Assignments needed an owner check beyond the role check. A second director could edit another director’s assignment. Fixed by comparing `createdBy` with the logged-in director’s id for update and delete operations. |
