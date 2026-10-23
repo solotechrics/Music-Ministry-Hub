@@ -1,0 +1,73 @@
+{
+  "info": {
+    "_postman_id": "75dc992f-8fc4-4ed6-88fb-9cfe0a639a6f",
+    "name": "Music Ministry Hub",
+    "description": "Runnable local API requests. Set baseUrl and token variables in a local Postman environment. Token values are intentionally not included.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3006/api" },
+    { "key": "directorToken", "value": "" },
+    { "key": "director2Token", "value": "" },
+    { "key": "memberToken", "value": "" },
+    { "key": "member2Token", "value": "" },
+    { "key": "songId", "value": "" },
+    { "key": "assignmentId", "value": "" },
+    { "key": "submissionId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        { "name": "Sign up", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"New Member\",\n  \"email\": \"new-member@example.com\",\n  \"password\": \"Password123\",\n  \"memberType\": \"chorister\",\n  \"part\": \"alto\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/auth/signup" } },
+        { "name": "Login director", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"director@example.com\",\n  \"password\": \"Password123\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/auth/login" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) pm.environment.set('directorToken', pm.response.json().token);"] } }] },
+        { "name": "Login director 2", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"director2@example.com\",\n  \"password\": \"Password123\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/auth/login" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) pm.environment.set('director2Token', pm.response.json().token);"] } }] },
+        { "name": "Login member", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"member@example.com\",\n  \"password\": \"Password123\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/auth/login" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) pm.environment.set('memberToken', pm.response.json().token);"] } }] },
+        { "name": "Login member 2", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"member2@example.com\",\n  \"password\": \"Password123\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/auth/login" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) pm.environment.set('member2Token', pm.response.json().token);"] } }] },
+        { "name": "Current member", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/auth/me" } }
+      ]
+    },
+    {
+      "name": "Songs",
+      "item": [
+        { "name": "List songs (401 without token)", "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/songs" } },
+        { "name": "List songs (401 bad token)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "abc123", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/songs" } },
+        { "name": "List songs", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/songs" } },
+        { "name": "Create song (403 member)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman test song\",\n  \"musicalKey\": \"C\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/songs" } },
+        { "name": "Create song (director)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{directorToken}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman test song\",\n  \"musicalKey\": \"C\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/songs" } },
+        { "name": "Get song", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/songs/{{songId}}" } },
+        { "name": "Song assignments", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/songs/{{songId}}/assignments" } },
+        { "name": "Update song", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{directorToken}}", "type": "string" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated test song\",\n  \"musicalKey\": \"G\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/songs/{{songId}}" } },
+        { "name": "Delete song (409 if assignments exist)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{directorToken}}", "type": "string" }] }, "method": "DELETE", "url": "{{baseUrl}}/songs/{{songId}}" } }
+      ]
+    },
+    {
+      "name": "Assignments",
+      "item": [
+        { "name": "List assignments (401 without token)", "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/assignments" } },
+        { "name": "List assignments", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/assignments" } },
+        { "name": "Create assignment (403 member)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"song\": \"{{songId}}\",\n  \"title\": \"Learn the alto part\",\n  \"type\": \"sight_singing\",\n  \"audience\": \"all\",\n  \"instructions\": \"Sing the alto line by sight.\",\n  \"deadline\": \"2099-12-31T18:00:00.000Z\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/assignments" } },
+        { "name": "Create assignment", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{directorToken}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"song\": \"{{songId}}\",\n  \"title\": \"Learn the alto part\",\n  \"type\": \"sight_singing\",\n  \"audience\": \"all\",\n  \"instructions\": \"Sing the alto line by sight.\",\n  \"deadline\": \"2099-12-31T18:00:00.000Z\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/assignments" } },
+        { "name": "Get assignment", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/assignments/{{assignmentId}}" } },
+        { "name": "Update assignment", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{directorToken}}", "type": "string" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated practice assignment\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/assignments/{{assignmentId}}" } },
+        { "name": "Update assignment (403 other director)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{director2Token}}", "type": "string" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Other director cannot edit\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/assignments/{{assignmentId}}" } },
+        { "name": "Delete assignment (403 other director)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{director2Token}}", "type": "string" }] }, "method": "DELETE", "url": "{{baseUrl}}/assignments/{{assignmentId}}" } },
+        { "name": "Delete assignment (409 if submissions exist)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{directorToken}}", "type": "string" }] }, "method": "DELETE", "url": "{{baseUrl}}/assignments/{{assignmentId}}" } }
+      ]
+    },
+    {
+      "name": "Submissions",
+      "item": [
+        { "name": "Submit work", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"link\": \"https://example.com/my-recording\",\n  \"note\": \"First attempt\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/assignments/{{assignmentId}}/submissions" } },
+        { "name": "Submit work again (409 duplicate)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"link\": \"https://example.com/my-recording\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/assignments/{{assignmentId}}/submissions" } },
+        { "name": "List assignment submissions (403 member)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/assignments/{{assignmentId}}/submissions" } },
+        { "name": "List assignment submissions (director)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{directorToken}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/assignments/{{assignmentId}}/submissions" } },
+        { "name": "My submissions", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/submissions/mine" } },
+        { "name": "Get submission (owner)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/submissions/{{submissionId}}" } },
+        { "name": "Update submission (owner)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"link\": \"https://example.com/updated-recording\",\n  \"note\": \"Updated attempt\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/submissions/{{submissionId}}" } },
+        { "name": "Delete submission (owner)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{memberToken}}", "type": "string" }] }, "method": "DELETE", "url": "{{baseUrl}}/submissions/{{submissionId}}" } }
+      ]
+    },
+    { "name": "Health", "item": [{ "name": "Health check", "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/health" } }] }
+  ]
+}

@@ -10,6 +10,7 @@ Database: MongoDB (Mongoose). ERD: see `erd.png` (generated from `erd.dbml` on d
 | _id | ObjectId | |
 | fullName | String | required, max 100 |
 | email | String | required, unique |
+| password | String | required, hashed and hidden from JSON responses |
 | role | String enum: director, member | default member |
 | memberType | String enum: chorister, instrumentalist | required |
 | part | String | voice part or instrument, e.g. alto, keyboard |
@@ -27,7 +28,7 @@ Database: MongoDB (Mongoose). ERD: see `erd.png` (generated from `erd.dbml` on d
 | notes | String | optional |
 | createdAt, updatedAt | Date | automatic timestamps |
 
-**services**
+**services (not built; planned for later)**
 | Field | Type | Notes |
 | --- | --- | --- |
 | _id | ObjectId | |
@@ -58,9 +59,10 @@ Database: MongoDB (Mongoose). ERD: see `erd.png` (generated from `erd.dbml` on d
 | member | ObjectId, ref members | required |
 | link | String | link to recording or photo of paper work |
 | note | String | optional |
-| submittedAt | Date | used to flag late work |
+| isLate | Boolean | set by the server based on the assignment deadline; default false |
+| createdAt, updatedAt | Date | automatic timestamps; `createdAt` is the submission time |
 
-Unique index: `{ assignment, member }`, so one submission per member per assignment.
+Unique index: `{ assignment, member }`, so a member can create one submission per assignment. A repeated create returns 409; an existing submission can be edited with PUT.
 
 ## Relationships
 - A song has many assignments (one-to-many, reference)
@@ -75,27 +77,39 @@ Unique index: `{ assignment, member }`, so one submission per member per assignm
 - **Setlist embedded in the service:** a setlist is small and always read with its service, so one document is simpler than a join collection.
 - **Links, not file uploads:** submissions store a link (Drive, YouTube) or a note. This keeps the API light and avoids file storage.
 - **Enums for role, type and audience:** limits values to known options and makes validation simple.
-- **One submission per member per assignment:** enforced by a unique index; a resubmission updates the existing one.
+- **One submission per member per assignment:** enforced by a unique index; a repeated create returns 409 and an existing submission can be edited with PUT.
 - **musicalKey as validated text:** keys follow a fixed pattern (letter A-G, optional # or b, optional m for minor).
 
-## Week 1 endpoints: Songs (built and tested this week)
+## Built API endpoints
 
-Base path: `/api`. `:id` is a MongoDB ObjectId (24 hex characters).
+Base path: `/api`. `:id` is a MongoDB ObjectId (24 hexadecimal characters).
 
-| Method | Path | Purpose | Request body | Success response | Errors |
-| --- | --- | --- | --- | --- | --- |
-| POST | /songs | Create a song | title, musicalKey (required); composer, tempoBpm, referenceLink, notes | 201 + created song | 400 invalid input |
-| GET | /songs | List all songs | none | 200 + array of songs | none |
-| GET | /songs/:id | Get one song | none | 200 + song | 400 invalid id, 404 not found |
-| PUT | /songs/:id | Update a song | same fields as create | 200 + updated song | 400 invalid input or id, 404 not found |
-| DELETE | /songs/:id | Delete a song | none | 200 + `{ "message": "Song deleted" }` | 400 invalid id, 404 not found |
+| Method | Path | Access | Request body | Success | Errors |
+| ------ | ---------------------------- | ---------------------- | ---------------------------------------------------------------------------- | -------------------- | ---------------------------------------------- |
+| GET | /health | Public | none | 200 | none |
+| POST | /auth/signup | Public | fullName, email, password, memberType, part (optional) | 201 member | 400, 409 |
+| POST | /auth/login | Public | email, password | 200 token and member | 400, 401 |
+| GET | /auth/me | Logged in | none | 200 member | 401 |
+| GET | /songs | Logged in | none | 200 | 401 |
+| POST | /songs | Director | title, musicalKey, plus optional fields | 201 | 400, 401, 403 |
+| GET | /songs/:id | Logged in | none | 200 | 400, 401, 404 |
+| PUT | /songs/:id | Director | title, musicalKey, plus optional fields | 200 | 400, 401, 403, 404 |
+| DELETE | /songs/:id | Director | none | 200 | 400, 401, 403, 404, 409 (song has assignments) |
+| GET | /songs/:id/assignments | Logged in | none | 200 | 400, 401, 404 |
+| GET | /assignments | Logged in | none | 200 | 401 |
+| POST | /assignments | Director | song, title, type, audience, instructions, deadline, tutorialLink (optional) | 201 | 400, 401, 403, 404 (song missing) |
+| GET | /assignments/:id | Logged in | none | 200 | 400, 401, 404 |
+| PUT | /assignments/:id | Creating director | any of title, type, audience, instructions, tutorialLink, deadline | 200 | 400, 401, 403, 404 |
+| DELETE | /assignments/:id | Creating director | none | 200 | 400, 401, 403, 404, 409 (has submissions) |
+| POST | /assignments/:id/submissions | Member in the audience | link, note (optional) | 201 | 400, 401, 403, 404, 409 (already submitted) |
+| GET | /assignments/:id/submissions | Director | none | 200 | 400, 401, 403, 404 |
+| GET | /submissions/mine | Member | none | 200 | 401, 403 |
+| GET | /submissions/:id | Owning member | none | 200 | 400, 401, 403, 404 |
+| PUT | /submissions/:id | Owning member | link, note | 200 | 400, 401, 403, 404 |
+| DELETE | /submissions/:id | Owning member | none | 200 | 400, 401, 403, 404 |
 
-Validation rules (songs):
-- title: required, 1 to 120 characters
-- musicalKey: required, pattern letter A-G, optional # or b, optional m
-- tempoBpm: optional, whole number from 30 to 240
-- referenceLink: optional, must be a valid URL
+Services and setlists endpoints: **Not built. Planned for later.**
 
-## Planned endpoints (not built yet)
-- Week 2: auth (sign-up, login), members, services and setlists, assignments, submissions
-- Details will be added to this spec when each is built.
+Errors use the shape `{ "error": { "code": "...", "message": "..." } }`.
+
+Duplicate member email and duplicate member/assignment submissions return 409. Deleting a song that has assignments or an assignment that has submissions also returns 409. Request bodies are validated with Zod at the API boundary and Mongoose at the model layer.

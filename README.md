@@ -10,32 +10,49 @@ Node.js, Express, MongoDB (Mongoose), Zod
 
 Week 1: Songs CRUD (create, list, get one, update, delete). Week 2: authentication, assignments, and submissions.
 
-## How to run (local)
+## Run locally
 
-1. Install Node.js. Install MongoDB locally, or create a free MongoDB Atlas cluster.
-2. Clone the repo and run `npm install`.
-3. Copy `.env.example` to `.env` and set `MONGODB_URI` to your own connection string.
-4. Seed sample data with `npm run seed`.
-5. Start the server with `npm run dev`. The API runs on `http://localhost:3006/api`.
+1. Install Node.js and use a local MongoDB instance or an Atlas database.
+2. Run `npm install`.
+3. Copy `.env.example` to `.env` and set `MONGODB_URI` to your development database. The JWT values in the example are fake development placeholders; use your own local values when needed.
+4. Run `npm run seed` to reset and populate the database.
+5. Run `npm run dev`. The API base URL is `http://localhost:3006/api`.
 
-## Endpoints
+## Seed accounts and authentication
 
-| Method | Path           | Purpose       |
-| ------ | -------------- | ------------- |
-| POST   | /api/songs     | Create a song |
-| GET    | /api/songs     | List songs    |
-| GET    | /api/songs/:id | Get one song  |
-| PUT    | /api/songs/:id | Update a song |
-| DELETE | /api/songs/:id | Delete a song |
-| GET | /api/songs/:id/assignments | List a song's assignments |
-| GET, POST | /api/assignments | List or create assignments |
-| GET, PUT, DELETE | /api/assignments/:id | Read or manage an assignment |
-| POST | /api/assignments/:id/submissions | Submit work for an assignment |
-| GET | /api/assignments/:id/submissions | List an assignment's submissions (director) |
-| GET | /api/submissions/mine | List the logged-in member's submissions |
-| PUT, DELETE | /api/submissions/:id | Update or delete an owned submission |
+`npm run seed` creates these local test accounts. All four use password `Password123`.
 
-Full details: `/docs/data-model-and-api-spec.md`
+| Role | Email |
+| --- | --- |
+| Director | `director@example.com` |
+| Director | `director2@example.com` |
+| Member (chorister) | `member@example.com` |
+| Member (instrumentalist) | `member2@example.com` |
+
+Log in with `POST /auth/login` and copy the returned token. Send it on protected requests in the `Authorization` header as `Bearer <token>`.
+
+```bash
+curl -X POST http://localhost:3006/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"director@example.com","password":"Password123"}'
+```
+
+Copy `token` from that response into a local shell variable, then attach it to protected requests:
+
+```bash
+TOKEN='<token returned by login>'
+curl http://localhost:3006/api/auth/me -H "Authorization: Bearer $TOKEN"
+```
+
+## API and test requests
+
+See the [built API spec](docs/data-model-and-api-spec.md) and [permissions table](docs/permissions-and-endpoints.md). The versioned [Postman Collection v2.1](docs/postman/music-ministry-hub.postman_collection.json) includes Auth, Songs, Assignments, and Submissions requests, including expected 401, 403, and 409 failures. Tokens belong in a local Postman environment; never commit them.
+
+All API errors use `{ "error": { "code": "...", "message": "..." } }`.
+
+## Week 2 feedback response
+
+Week 2 addressed feedback around clear access rules and reliable input handling by adding role and owner checks, Zod request validation, duplicate protection, and 409 conflicts when a parent still has child records. Services and setlists are marked as planned for later.
 
 ## Docs
 
@@ -43,6 +60,10 @@ Full details: `/docs/data-model-and-api-spec.md`
 - `/docs/work-plan.md`
 - `/docs/data-model-and-api-spec.md`
 - `/docs/erd.dbml` and `erd.png`
+- `/docs/permissions-and-endpoints.md`
+- `/docs/postman/music-ministry-hub.postman_collection.json`
+
+[Issue log (Week 2)](#issue-log-week-2)
 
 ## Issue Log week 2
 
