@@ -52,7 +52,7 @@ All API errors use `{ "error": { "code": "...", "message": "..." } }`.
 
 ## Week 2 feedback response
 
-Week 2 addressed feedback around clear access rules and reliable input handling by adding role and owner checks, Zod request validation, duplicate protection, and 409 conflicts when a parent still has child records. Services and setlists are marked as planned for later.
+No written mentor feedback has been received yet. Week 2 followed the Week 1 work plan: authentication with roles and ownership checks, assignments and submissions linked to songs and members, Zod request validation, duplicate protection, and 409 conflicts when a parent still has child records. Services and setlists are marked as planned for later.
 
 ## Docs
 
@@ -63,18 +63,4 @@ Week 2 addressed feedback around clear access rules and reliable input handling 
 - `/docs/permissions-and-endpoints.md`
 - `/docs/postman/music-ministry-hub.postman_collection.json`
 
-[Issue log (Week 2)](docs/week-2/issue-log.md)
-
-## Issue Log week 2
-
-| # | Issue | What happened | Fix |
-| --- | --- | --- | --- |
-| 1 | npm scripts did not run | `npm run seed` and `npm run dev` could not find their entry points. | Pointed the scripts to files in `src/`. |
-| 2 | Invalid JSON in Postman | A PUT body had a missing key name and trailing comma. | Fixed the JSON; the error handler returned 400 as designed. |
-| 3 | Postman base URL confusion | The environment was not selected and `baseUrl` lacked `/api`. | Selected the correct environment and set `baseUrl` to include `/api`. |
-| 4 | Week 1 update note contained placeholders | The note was submitted before the links and blockers were filled in. | Sent a corrected update note. |
-| 5 | Mongoose 9 sign-up hook error | The next callback in a pre-save hook was unsupported. | Replaced it with an async hook without `next`. |
-| 6 | Assignment ownership | A second director could edit another director’s assignment. | Checked that `createdBy` matches the logged-in director for update and delete. |
-| 7 | Duplicate submissions | A member could submit twice to the same assignment. | Added a unique index on `assignment` and `member`; the error handler returns 409. |
-| 8 | Input was validated only by Mongoose. Added Zod schemas at the API boundary on every input, so bad requests are rejected early, and unknown fields are dropped. | Validation previously happened at the database layer. | Added Zod validation middleware before route handlers. |
-| 9 | Deleting a song or assignment would leave orphaned assignments or submissions. | Parent records could be removed while child records still referenced them. | Now returns 409 if children exist; ownership is checked before the conflict check, so non-owners get 403. |
+[Issue log (Week 2)](docs/week-2/issue-log.md) - 9 entries, with what happened and how each was fixed.
