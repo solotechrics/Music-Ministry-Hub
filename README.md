@@ -56,3 +56,4 @@ Full details: `/docs/data-model-and-api-spec.md`
 | 6 | Assignment ownership | A second director could edit another director’s assignment. | Checked that `createdBy` matches the logged-in director for update and delete. |
 | 7 | Duplicate submissions | A member could submit twice to the same assignment. | Added a unique index on `assignment` and `member`; the error handler returns 409. |
 | 8 | Input was validated only by Mongoose. Added Zod schemas at the API boundary on every input, so bad requests are rejected early, and unknown fields are dropped. | Validation previously happened at the database layer. | Added Zod validation middleware before route handlers. |
+| 9 | Deleting a song or assignment would leave orphaned assignments or submissions. | Parent records could be removed while child records still referenced them. | Now returns 409 if children exist; ownership is checked before the conflict check, so non-owners get 403. |
