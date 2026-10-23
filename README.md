@@ -63,7 +63,7 @@ Week 2 addressed feedback around clear access rules and reliable input handling 
 - `/docs/permissions-and-endpoints.md`
 - `/docs/postman/music-ministry-hub.postman_collection.json`
 
-[Issue log (Week 2)](#issue-log-week-2)
+[Issue log (Week 2)](docs/week-2/issue-log.md)
 
 ## Issue Log week 2
 

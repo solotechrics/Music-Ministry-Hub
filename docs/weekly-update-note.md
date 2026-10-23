@@ -4,7 +4,7 @@ Delivered:
 - Idea one-pager and work plan: /docs in the repo
 - Task 1.1 ERD and API spec: /docs/data-model-and-api-spec.md and /docs/erd.png
 - Task 1.2 Songs CRUD (create, list, get one, update, delete) with validation, error handling and seed data: https://github.com/solotechrics/Music-Ministry-Hub, tag week-1
-- Sample requests: requests.http in the repo root
+- Sample requests: [Postman collection](postman/music-ministry-hub.postman_collection.json)
 - Drive folder: [[Drive link](https://drive.google.com/drive/folders/1f7mEpJ8Sfc-eHmBhHJoXYLzWrrRdNCsR?usp=drive_link)]
 
 Changed after feedback: Not applicable (Week 1).
