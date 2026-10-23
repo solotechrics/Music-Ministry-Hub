@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const connectDB = require("./config/db");
 const Song = require("./models/Song");
 const Member = require("./models/Member");
+const Assignment = require("./models/Assignment");
 
 const songs = [
     {
@@ -55,11 +56,20 @@ const members = [
         memberType: "chorister",
         part: "alto",
     },
+    {
+        fullName: "Director Two",
+        email: "director2@example.com",
+        password: "Password123",
+        role: "director",
+        memberType: "instrumentalist",
+        part: "piano",
+    },
 ];
 
 async function seed() {
     await connectDB();
 
+    await Assignment.deleteMany({});
     await Song.deleteMany({});
     const createdSongs = await Song.insertMany(songs);
     console.log(`Seeded ${createdSongs.length} songs`);
@@ -67,6 +77,39 @@ async function seed() {
     await Member.deleteMany({});
     await Member.create(members);
     console.log(`Seeded ${members.length} members`);
+
+    const director = await Member.findOne({ email: "director@example.com" });
+    const sampleAssignments = [
+        {
+            song: createdSongs[0]._id,
+            createdBy: director._id,
+            title: "Learn the alto part",
+            type: "sight_singing",
+            audience: "choristers",
+            instructions: "Sing the alto line of the first verse by sight.",
+            deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+        {
+            song: createdSongs[1]._id,
+            createdBy: director._id,
+            title: "Practice the melody by ear",
+            type: "by_ear",
+            audience: "all",
+            instructions: "Listen to the reference and practice the melody.",
+            deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        },
+        {
+            song: createdSongs[2]._id,
+            createdBy: director._id,
+            title: "Read the keyboard part",
+            type: "sight_reading",
+            audience: "instrumentalists",
+            instructions: "Read through the accompaniment at a steady tempo.",
+            deadline: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
+        },
+    ];
+    await Assignment.create(sampleAssignments);
+    console.log(`Seeded ${sampleAssignments.length} assignments`);
 
     await mongoose.disconnect();
 }
