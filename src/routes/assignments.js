@@ -170,7 +170,16 @@ router.delete("/:id", authorize("director"), async (req, res) => {
         });
     }
 
-    // Step 8: block deleting an assignment that has submissions (409).
+    const inUse = await Submission.countDocuments({ assignment: req.params.id });
+    if (inUse > 0) {
+        return res.status(409).json({
+            error: {
+                code: "CONFLICT",
+                message: "Cannot delete an assignment that already has submissions",
+            },
+        });
+    }
+
     await assignment.deleteOne();
     res.status(200).json({ message: "Assignment deleted" });
 });
