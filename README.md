@@ -18,6 +18,10 @@ Week 1: Songs CRUD (create, list, get one, update, delete). Week 2: authenticati
 4. Run `npm run seed` to reset and populate the database.
 5. Run `npm run dev`. The API base URL is `http://localhost:3006/api`.
 
+## Run tests
+
+Run `npm test` for the complete Jest and Supertest suite, or `npm run test:coverage` to include coverage. Tests use an isolated in-memory MongoDB and do not connect to the development or production database. On the first run, `mongodb-memory-server` downloads a MongoDB binary, so an internet connection is required. If MongoDB is already installed locally, point the test helper at that executable for the run with `MONGOMS_SYSTEM_BINARY=/path/to/mongod npm test` (replace the example path with your local `mongod` path).
+
 ## Seed accounts and authentication
 
 `npm run seed` creates these local test accounts. All four use password `Password123`.
