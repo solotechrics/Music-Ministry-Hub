@@ -4,6 +4,9 @@ const express = require("express");
 const request = require("supertest");
 const { createAuthRateLimiter } = require("../src/middleware/authRateLimit");
 const api = require("../src/app");
+const { errorHandler } = require("../src/middleware/errorHandler");
+
+afterEach(() => jest.restoreAllMocks());
 
 describe("authentication rate limiter", () => {
     it("returns 429 after the configured number of requests", async () => {
@@ -30,5 +33,22 @@ describe("JSON body limit", () => {
             .send({ email: "member@example.com", password: "x".repeat(110_000) });
         expect(res.status).toBe(413);
         expect(res.body.error.code).toBe("PAYLOAD_TOO_LARGE");
+    });
+});
+
+describe("error responses", () => {
+    it("does not include exception details or stack traces in a 500 response", () => {
+        jest.spyOn(console, "error").mockImplementation(() => {});
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+        const error = new Error("private failure detail");
+        error.stack = "private stack trace";
+
+        errorHandler(error, {}, res, jest.fn());
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({
+            error: { code: "SERVER_ERROR", message: "Something went wrong" },
+        });
+        expect(JSON.stringify(res.json.mock.calls[0][0])).not.toContain("stack");
     });
 });
