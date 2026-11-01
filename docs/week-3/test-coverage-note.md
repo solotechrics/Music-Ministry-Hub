@@ -11,9 +11,9 @@
 
 ## What was executed
 
-The complete plain `npm test` command passed with no `MONGOMS_*` environment variables set: **7 suites, 42 tests**. The same command passed in a fresh clone after `npm ci` and copying `.env.example` to `.env`.
+The complete plain `npm test` command passed with no `MONGOMS_*` environment variables set: **7 suites, 43 tests**. The same command passed in a fresh clone after `npm ci` and copying `.env.example` to `.env`.
 
-The complete `npm run test:coverage` suite also passed: **7 suites, 42 tests**. Overall measured coverage was **82.35% statements, 67.83% branches, 87.50% functions, and 84.26% lines**. The runs used the default in-memory MongoDB binary, version **7.0.24**.
+The complete `npm run test:coverage` suite also passed: **7 suites, 43 tests**. Overall measured coverage was **82.35% statements, 67.83% branches, 87.50% functions, and 84.26% lines**. The runs used the default in-memory MongoDB binary, version **7.0.24**.
 
 On the first run, `mongodb-memory-server` downloads its default MongoDB binary and needs internet access. If MongoDB is already installed, set `MONGOMS_SYSTEM_BINARY` to the local `mongod` executable path for the command. The repository does not contain a machine-specific binary path. Tests always use the in-memory database; `MONGODB_URI_TEST` is not used.
 

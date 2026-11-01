@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const Member = require("../src/models/Member");
 const {
     signupSchema,
+    loginSchema,
     songSchema,
     assignmentCreateSchema,
     submissionCreateSchema,
@@ -18,6 +19,20 @@ const response = function () {
 };
 
 describe("Zod schemas", () => {
+    it("removes MongoDB operator and dotted keys from validated login data", () => {
+        const result = loginSchema.safeParse({
+            email: "member@example.com",
+            password: "Password123",
+            $where: "this.role === 'director'",
+            "email.password": "unexpected",
+        });
+        expect(result.success).toBe(true);
+        expect(result.data).toEqual({
+            email: "member@example.com",
+            password: "Password123",
+        });
+    });
+
     it("accepts and normalizes valid signup input", () => {
         const result = signupSchema.safeParse({
             fullName: "  Test Person ",

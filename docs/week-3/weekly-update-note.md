@@ -13,8 +13,8 @@
 
 ## Verification
 
-- `npm test`: **7 suites, 42 tests passed**; also passed from a fresh clone after `npm ci` and copying `.env.example` to `.env`.
-- `npm run test:coverage`: **7 suites, 42 tests passed**; 82.35% statements, 67.83% branches, 87.50% functions, and 84.26% lines.
+- `npm test`: **7 suites, 43 tests passed**; rerun in the final clone after installing dependencies and copying `.env.example` to `.env`.
+- `npm run test:coverage`: **7 suites, 43 tests passed**; 82.35% statements, 67.83% branches, 87.50% functions, and 84.26% lines.
 - OpenAPI YAML parse: passed with 12 paths, 21 operations, and all local references resolving.
 - `npm audit`: 21 findings were reported on 2026-11-01 (3 low, 17 moderate, 1 high); re-run before submission in case registry advisories changed.
 
