@@ -12,7 +12,9 @@ const {
     assignmentCreateSchema,
     assignmentUpdateSchema,
     submissionCreateSchema,
+    paginationSchema,
 } = require("../validators/schemas");
+const { validateQuery } = require("../middleware/validate");
 
 const router = express.Router();
 router.use(authenticate);
@@ -85,15 +87,20 @@ router.post(
     },
 );
 
-router.get("/:id/submissions", authorize("director"), async (req, res) => {
+router.get("/:id/submissions", authorize("director"), validateQuery(paginationSchema), async (req, res) => {
     const assignment = await Assignment.findById(req.params.id);
     if (!assignment) return sendNotFound(res);
 
-    const submissions = await Submission.find({ assignment: req.params.id }).populate(
-        "member",
-        "fullName memberType part",
-    );
-    res.status(200).json(submissions);
+    const { page, limit } = req.pagination;
+    const [data, total] = await Promise.all([
+        Submission.find({ assignment: req.params.id })
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .populate("member", "fullName memberType part"),
+        Submission.countDocuments({ assignment: req.params.id }),
+    ]);
+    res.status(200).json({ data, page, limit, total, totalPages: Math.ceil(total / limit) });
 });
 
 router.post(
@@ -117,11 +124,17 @@ router.post(
     },
 );
 
-router.get("/", async (req, res) => {
-    const assignments = await Assignment.find()
-        .sort({ createdAt: -1 })
-        .populate("song", "title musicalKey");
-    res.status(200).json(assignments);
+router.get("/", validateQuery(paginationSchema), async (req, res) => {
+    const { page, limit } = req.pagination;
+    const [data, total] = await Promise.all([
+        Assignment.find()
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .populate("song", "title musicalKey"),
+        Assignment.countDocuments(),
+    ]);
+    res.status(200).json({ data, page, limit, total, totalPages: Math.ceil(total / limit) });
 });
 
 router.get("/:id", async (req, res) => {

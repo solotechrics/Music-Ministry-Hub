@@ -64,4 +64,9 @@ const assignmentSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
+// Supports the song filter used when listing a song's assignments.
+assignmentSchema.index({ song: 1 });
+// Supports newest-first ordering used by the assignment list endpoint.
+assignmentSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model("Assignment", assignmentSchema);

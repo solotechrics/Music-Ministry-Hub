@@ -6,7 +6,8 @@ const Song = require("../models/Song");
 const Assignment = require("../models/Assignment");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
 const { validate } = require("../middleware/validate");
-const { songSchema } = require("../validators/schemas");
+const { songSchema, paginationSchema } = require("../validators/schemas");
+const { validateQuery } = require("../middleware/validate");
 
 const router = express.Router();
 router.use(authenticate);
@@ -50,9 +51,13 @@ router.post("/", authorize("director"), validate(songSchema), async (req, res) =
     res.status(201).json(song);
 });
 
-router.get("/", async (req, res) => {
-    const songs = await Song.find().sort({ title: 1 });
-    res.status(200).json(songs);
+router.get("/", validateQuery(paginationSchema), async (req, res) => {
+    const { page, limit } = req.pagination;
+    const [data, total] = await Promise.all([
+        Song.find().sort({ title: 1 }).skip((page - 1) * limit).limit(limit),
+        Song.countDocuments(),
+    ]);
+    res.status(200).json({ data, page, limit, total, totalPages: Math.ceil(total / limit) });
 });
 
 router.get("/:id", async (req, res) => {

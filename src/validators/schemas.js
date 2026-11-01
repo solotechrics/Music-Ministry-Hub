@@ -68,6 +68,11 @@ const submissionUpdateSchema = submissionCreateSchema
         message: "at least one field is required",
     });
 
+const paginationSchema = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+}).strict();
+
 module.exports = {
     objectId,
     httpUrl,
@@ -78,4 +83,5 @@ module.exports = {
     assignmentUpdateSchema,
     submissionCreateSchema,
     submissionUpdateSchema,
+    paginationSchema,
 };

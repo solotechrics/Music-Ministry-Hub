@@ -57,4 +57,7 @@ const songSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
+// Supports the title ordering used by the song list endpoint.
+songSchema.index({ title: 1 });
+
 module.exports = mongoose.model("Song", songSchema);

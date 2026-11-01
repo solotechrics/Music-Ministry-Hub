@@ -43,5 +43,9 @@ const submissionSchema = new mongoose.Schema(
 );
 
 submissionSchema.index({ assignment: 1, member: 1 }, { unique: true });
+// Supports newest-first paging of a member's submissions.
+submissionSchema.index({ member: 1, createdAt: -1 });
+// Supports newest-first paging of submissions for one assignment.
+submissionSchema.index({ assignment: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Submission", submissionSchema);

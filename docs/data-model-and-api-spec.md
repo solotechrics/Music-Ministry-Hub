@@ -90,20 +90,20 @@ Base path: `/api`. `:id` is a MongoDB ObjectId (24 hexadecimal characters).
 | POST | /auth/signup | Public | fullName, email, password, memberType, part (optional) | 201 member | 400, 409 |
 | POST | /auth/login | Public | email, password | 200 token and member | 400, 401 |
 | GET | /auth/me | Logged in | none | 200 member | 401 |
-| GET | /songs | Logged in | none | 200 | 401 |
+| GET | /songs | Logged in | `page` and `limit` query parameters (optional) | 200 `{ data, page, limit, total, totalPages }` | 400, 401 |
 | POST | /songs | Director | title, musicalKey, plus optional fields | 201 | 400, 401, 403 |
 | GET | /songs/:id | Logged in | none | 200 | 400, 401, 404 |
 | PUT | /songs/:id | Director | title, musicalKey, plus optional fields | 200 | 400, 401, 403, 404 |
 | DELETE | /songs/:id | Director | none | 200 | 400, 401, 403, 404, 409 (song has assignments) |
 | GET | /songs/:id/assignments | Logged in | none | 200 | 400, 401, 404 |
-| GET | /assignments | Logged in | none | 200 | 401 |
+| GET | /assignments | Logged in | `page` and `limit` query parameters (optional) | 200 `{ data, page, limit, total, totalPages }` | 400, 401 |
 | POST | /assignments | Director | song, title, type, audience, instructions, deadline, tutorialLink (optional) | 201 | 400, 401, 403, 404 (song missing) |
 | GET | /assignments/:id | Logged in | none | 200 | 400, 401, 404 |
 | PUT | /assignments/:id | Creating director | any of title, type, audience, instructions, tutorialLink, deadline | 200 | 400, 401, 403, 404 |
 | DELETE | /assignments/:id | Creating director | none | 200 | 400, 401, 403, 404, 409 (has submissions) |
 | POST | /assignments/:id/submissions | Member in the audience | link, note (optional) | 201 | 400, 401, 403, 404, 409 (already submitted) |
-| GET | /assignments/:id/submissions | Director | none | 200 | 400, 401, 403, 404 |
-| GET | /submissions/mine | Member | none | 200 | 401, 403 |
+| GET | /assignments/:id/submissions | Director | `page` and `limit` query parameters (optional) | 200 `{ data, page, limit, total, totalPages }` | 400, 401, 403, 404 |
+| GET | /submissions/mine | Member | `page` and `limit` query parameters (optional) | 200 `{ data, page, limit, total, totalPages }` | 400, 401, 403 |
 | GET | /submissions/:id | Owning member | none | 200 | 400, 401, 403, 404 |
 | PUT | /submissions/:id | Owning member | link, note | 200 | 400, 401, 403, 404 |
 | DELETE | /submissions/:id | Owning member | none | 200 | 400, 401, 403, 404 |
@@ -111,5 +111,7 @@ Base path: `/api`. `:id` is a MongoDB ObjectId (24 hexadecimal characters).
 Services and setlists endpoints: **Not built. Planned for later.**
 
 Errors use the shape `{ "error": { "code": "...", "message": "..." } }`.
+
+Paginated endpoints default to `page=1` and `limit=20`; `limit` cannot exceed 100. A successful response wraps the records in `data` and includes the current page, page size, total record count, and number of pages. For an empty result, `totalPages` is 0.
 
 Duplicate member email and duplicate member/assignment submissions return 409. Deleting a song that has assignments or an assignment that has submissions also returns 409. Request bodies are validated with Zod at the API boundary and Mongoose at the model layer.

@@ -7,7 +7,8 @@ const Assignment = require("../models/Assignment");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
 const { validate } = require("../middleware/validate");
 const isLate = require("../utils/isLate");
-const { submissionUpdateSchema } = require("../validators/schemas");
+const { submissionUpdateSchema, paginationSchema } = require("../validators/schemas");
+const { validateQuery } = require("../middleware/validate");
 
 const router = express.Router();
 router.use(authenticate);
@@ -37,12 +38,18 @@ router.param("id", (req, res, next, id) => {
     next();
 });
 
-router.get("/mine", authorize("member"), async (req, res) => {
-    const submissions = await Submission.find({ member: req.member._id }).populate(
-        "assignment",
-        "title deadline",
-    );
-    res.status(200).json(submissions);
+router.get("/mine", authorize("member"), validateQuery(paginationSchema), async (req, res) => {
+    const { page, limit } = req.pagination;
+    const filter = { member: req.member._id };
+    const [data, total] = await Promise.all([
+        Submission.find(filter)
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .populate("assignment", "title deadline"),
+        Submission.countDocuments(filter),
+    ]);
+    res.status(200).json({ data, page, limit, total, totalPages: Math.ceil(total / limit) });
 });
 
 router.get("/:id", authorize("member"), async (req, res) => {

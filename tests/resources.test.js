@@ -5,6 +5,7 @@ process.env.JWT_SECRET = "test-secret";
 const request = require("supertest");
 const app = require("../src/app");
 const Member = require("../src/models/Member");
+const Song = require("../src/models/Song");
 const Assignment = require("../src/models/Assignment");
 const Submission = require("../src/models/Submission");
 const { connectTestDB, clearDB, closeDB, DB_STARTUP_TIMEOUT_MS } = require("./helpers");
@@ -17,6 +18,25 @@ afterAll(closeDB);
 const auth = (token) => ({ Authorization: `Bearer ${token}` });
 
 describe("songs API", () => {
+    it("paginates songs and validates pagination parameters", async () => {
+        const member = await createMember();
+        await Song.create([
+            { title: "A Song", musicalKey: "C" },
+            { title: "B Song", musicalKey: "G" },
+        ]);
+        const headers = auth(tokenFor(member));
+
+        const page = await request(app).get("/api/songs?page=2&limit=1").set(headers);
+        expect(page.status).toBe(200);
+        expect(page.body).toMatchObject({ page: 2, limit: 1, total: 2, totalPages: 2 });
+        expect(page.body.data).toHaveLength(1);
+        expect(page.body.data[0].title).toBe("B Song");
+
+        const invalid = await request(app).get("/api/songs?page=0").set(headers);
+        expect(invalid.status).toBe(400);
+        expect(invalid.body.error.code).toBe("VALIDATION_ERROR");
+    });
+
     it("requires authentication and director role for writes", async () => {
         const songData = { title: "Amazing Grace", musicalKey: "G" };
         expect((await request(app).get("/api/songs")).status).toBe(401);
@@ -48,6 +68,38 @@ describe("songs API", () => {
 });
 
 describe("assignments API", () => {
+    it("paginates assignments and their submissions", async () => {
+        const director = await createMember({ role: "director" });
+        const member = await createMember();
+        const song = await createSong();
+        const assignment = await createAssignment(song, director);
+        await Submission.create({
+            assignment: assignment._id,
+            member: member._id,
+            link: "https://example.com/submission",
+        });
+        const directorHeaders = auth(tokenFor(director));
+
+        const assignments = await request(app).get("/api/assignments?limit=1").set(directorHeaders);
+        expect(assignments.status).toBe(200);
+        expect(assignments.body).toMatchObject({ page: 1, limit: 1, total: 1, totalPages: 1 });
+        expect(assignments.body.data).toHaveLength(1);
+
+        const mine = await request(app)
+            .get("/api/submissions/mine?limit=1")
+            .set(auth(tokenFor(member)));
+        expect(mine.status).toBe(200);
+        expect(mine.body.total).toBe(1);
+        expect(mine.body.data).toHaveLength(1);
+
+        const submissions = await request(app)
+            .get(`/api/assignments/${assignment.id}/submissions?page=1&limit=1`)
+            .set(directorHeaders);
+        expect(submissions.status).toBe(200);
+        expect(submissions.body.totalPages).toBe(1);
+        expect(submissions.body.data).toHaveLength(1);
+    });
+
     it("lets only a director create assignments and checks missing songs", async () => {
         const director = await createMember({ role: "director" });
         const headers = auth(tokenFor(director));
