@@ -10,7 +10,8 @@
         "dev": "nodemon src/server.js",
         "start": "node src/server.js",
         "seed": "node src/seed.js",
-        "test": "jest --runInBand"
+        "test": "jest --runInBand",
+        "test:coverage": "jest --runInBand --coverage"
     },
     "repository": {
         "type": "git",
@@ -34,7 +35,17 @@
     },
     "devDependencies": {
         "jest": "^30.5.2",
+        "mongodb-memory-server": "^10.4.3",
         "nodemon": "^3.1.14",
         "supertest": "^7.3.1"
+    },
+    "jest": {
+        "testEnvironment": "node",
+        "testTimeout": 30000,
+        "collectCoverageFrom": [
+            "src/**/*.js",
+            "!src/server.js",
+            "!src/seed.js"
+        ]
     }
 }

@@ -1,24 +1,39 @@
-const { connectTestDB } = require("./helpers");
+"use strict";
 
-describe("test database safety guard", () => {
-    const original = process.env.MONGODB_URI_TEST;
+const mongoose = require("mongoose");
+const { connectTestDB, closeDB, DB_STARTUP_TIMEOUT_MS } = require("./helpers");
 
-    afterEach(() => {
-        process.env.MONGODB_URI_TEST = original;
+describe("in-memory test database", () => {
+    const originalUri = process.env.MONGODB_URI_TEST;
+
+    afterEach(async () => {
+        await closeDB();
+        if (originalUri === undefined) {
+            delete process.env.MONGODB_URI_TEST;
+        } else {
+            process.env.MONGODB_URI_TEST = originalUri;
+        }
     });
 
-    it("refuses to run when MONGODB_URI_TEST is missing", async () => {
+    const expectInMemoryDatabase = async () => {
+        await connectTestDB();
+        expect(mongoose.connection.name).toBe("music_ministry_test");
+        expect(mongoose.connection.host).toBe("127.0.0.1");
+    };
+
+    it("uses an isolated database when MONGODB_URI_TEST is missing", async () => {
         delete process.env.MONGODB_URI_TEST;
-        await expect(connectTestDB()).rejects.toThrow("MONGODB_URI_TEST is missing");
-    });
+        await expectInMemoryDatabase();
+    }, DB_STARTUP_TIMEOUT_MS);
 
-    it("refuses a database name that does not end with _test", async () => {
+    it("does not connect to a non-test MongoDB URI", async () => {
         process.env.MONGODB_URI_TEST = "mongodb://127.0.0.1:27017/music_ministry_hub";
-        await expect(connectTestDB()).rejects.toThrow("must end with _test");
-    });
+        await expectInMemoryDatabase();
+    }, DB_STARTUP_TIMEOUT_MS);
 
-    it("also catches a real database name with connection options", async () => {
-        process.env.MONGODB_URI_TEST = "mongodb+srv://user:pass@cluster.example.net/music_ministry_hub?retryWrites=true";
-        await expect(connectTestDB()).rejects.toThrow("must end with _test");
-    });
+    it("does not connect to an SRV URI with connection options", async () => {
+        process.env.MONGODB_URI_TEST =
+            "mongodb+srv://user:pass@cluster.example.net/music_ministry_hub?retryWrites=true";
+        await expectInMemoryDatabase();
+    }, DB_STARTUP_TIMEOUT_MS);
 });

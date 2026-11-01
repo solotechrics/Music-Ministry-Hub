@@ -2,30 +2,19 @@ require("dotenv").config({ quiet: true });
 process.env.JWT_SECRET = process.env.JWT_SECRET || "test-secret";
 
 const mongoose = require("mongoose");
+const os = require("os");
+const { MongoMemoryServer } = require("mongodb-memory-server");
+let mongoServer;
+const DB_STARTUP_TIMEOUT_MS = 10 * 60 * 1000;
 
 const connectTestDB = async function () {
-    const uri = process.env.MONGODB_URI_TEST;
-
-    if (!uri) {
-        throw new Error(
-            "MONGODB_URI_TEST is missing. Add it to your .env file.",
-        );
-    }
-
-    const dbName = uri.split("/").pop().split("?")[0];
-    if (!dbName.endsWith("_test")) {
-        throw new Error(
-            `Refusing to run tests on "${dbName}". The test database name must end with _test.`,
-        );
-    }
-
-      try {
-          await mongoose.connect(uri, { serverSelectionTimeoutMS: 3000 });
-      } catch (error) {
-          throw new Error(
-              `Could not connect to the test database. Is MongoDB running? (${error.message})`,
-          );
-      }
+    mongoServer = await MongoMemoryServer.create({ instance: { ip: "127.0.0.1" } });
+    await mongoose.connect(mongoServer.getUri(), {
+        dbName: "music_ministry_test",
+        serverSelectionTimeoutMS: 3000,
+        // Workaround for NODE-7832 in Jest; remove once the MongoDB driver is fixed.
+        runtimeAdapters: { os },
+    });
 
     await Promise.all(
         Object.values(mongoose.models).map((model) => model.init()),
@@ -40,7 +29,11 @@ const clearDB = async function () {
 };
 
 const closeDB = async function () {
-    await mongoose.connection.close();
+    await mongoose.disconnect();
+    if (mongoServer) {
+        await mongoServer.stop();
+        mongoServer = undefined;
+    }
 };
 
-module.exports = { connectTestDB, clearDB, closeDB };
+module.exports = { connectTestDB, clearDB, closeDB, DB_STARTUP_TIMEOUT_MS };
