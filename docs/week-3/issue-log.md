@@ -1,0 +1,10 @@
+# Week 3 Issue Log
+
+| # | Issue | What happened | Fix or follow-up |
+| --- | --- | --- | --- |
+| 1 | Mongoose connection failed under Jest | The database-backed suites failed during `mongoose.connect` with a missing MongoDB driver metadata subdocument, while the same connection worked in plain Node. Investigation matched MongoDB driver issue NODE-7832. | Passed the Node runtime adapter to Mongoose in the Jest helper and retained a focused connection regression test. |
+| 2 | First test run needs a MongoDB binary | `mongodb-memory-server` downloads MongoDB 7.0.24 on a cold machine. The first attempt exceeded Jest's original 30-second hook timeout while the binary was being downloaded. | Documented the internet requirement and increased only the database startup hook timeout; ordinary test timeouts remain 30 seconds. |
+| 3 | Test DB setting was obsolete | The test helper now always starts an isolated in-memory database, so `MONGODB_URI_TEST` in `.env.example` was misleading. | Removed it from `.env.example`; tests also confirm unsafe configured URIs do not redirect test connections. |
+| 4 | NoSQL selector input needed boundary evidence | Login queries are built from an email string, but a body containing an object selector should fail before the route can query MongoDB. | The Zod login schema requires strings and `validate` passes only parsed data to the route. Added an integration test for an object-selector login body. |
+| 5 | Dependency audit reported known vulnerabilities | `npm audit` reported 21 findings: 3 low, 17 moderate, and 1 high, including a high transitive `body-parser` finding and findings in the Jest and nodemon trees. | Recorded the findings in the security notes; the proposed Jest/nodemon fixes were major downgrades, so they were not applied automatically. Re-run and review compatible updates before deployment. |
+| 6 | Express 5 query object is read-only | Pagination must validate query strings without assigning back to `req.query`. | Added a Zod query validator that stores parsed values on `req.pagination`; API tests check pagination results and invalid page values. |

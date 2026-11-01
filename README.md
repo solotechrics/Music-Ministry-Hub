@@ -1,70 +1,74 @@
 # Music Ministry Hub
 
-An API for a church music ministry. Directors manage songs, post practice assignments with deadlines, and members submit their work, so rehearsal preparation happens before Sunday.
+Music Ministry Hub is a REST API for church music directors and members. It organizes a shared song library, practice assignments, and member submissions so rehearsal work is easier to plan and follow up.
 
-## Stack
+## Case study
 
-Node.js, Express, MongoDB (Mongoose), Zod
+### Problem
 
-## Status
+Songs, keys, and practice requests were shared in chat, where details could get lost. Directors also needed a clearer way to see who had submitted work and whether it arrived after an assignment deadline.
 
-Week 1: Songs CRUD (create, list, get one, update, delete). Week 2: authentication, assignments, and submissions.
+### Data model
+
+The API stores members, songs, assignments, and submissions in MongoDB. Assignments reference songs and their creating director; submissions reference one member and one assignment. A unique index allows one submission per member for an assignment. Services and setlists remain planned work.
+
+### Architecture
+
+Express 5 handles HTTP routes. Zod validates request bodies and pagination parameters before route logic; Mongoose models define persisted records and indexes. JWT bearer tokens protect private routes. Helmet, explicit CORS settings, JSON size limits, and auth rate limits provide basic API protections. Jest and Supertest exercise the HTTP API against isolated in-memory MongoDB instances.
+
+### Key decisions
+
+- Keep assignments and submissions in separate collections because each has its own lifecycle and queries.
+- Store recording links and notes instead of uploading media.
+- Check authorization and record ownership in route handlers.
+- Paginate the four growing list endpoints with a default page size of 20 and a maximum of 100.
+- Prevent parent deletion while related records exist instead of silently cascading deletes.
+
+### Limitations
+
+Services/setlists, file uploads, notifications, and a frontend are not implemented. Rate limiting uses an in-process memory store, so it does not coordinate across multiple service instances. Pagination uses offset/limit and exact counts. Free Render services sleep when idle. Review the dependency audit and replace demo accounts before production use.
 
 ## Run locally
 
-1. Install Node.js and use a local MongoDB instance or an Atlas database.
-2. Run `npm install`.
-3. Copy `.env.example` to `.env` and set `MONGODB_URI` to your development database. The JWT values in the example are fake development placeholders; use your own local values when needed.
-4. Run `npm run seed` to reset and populate the database.
-5. Run `npm run dev`. The API base URL is `http://localhost:3006/api`.
+Install Node.js and npm, install packages, copy `.env.example` to `.env`, configure `MONGODB_URI` and a private `JWT_SECRET`, and start MongoDB. See the [local setup guide](docs/setup-guide.md) for the full walkthrough.
+
+```sh
+npm ci
+npm run seed
+npm start
+```
+
+The seed script deletes the existing songs, members, assignments, and submissions in its target database. Use it only with a new or disposable database. `GET http://localhost:3006/api/health` returns `{ "status": "ok" }`.
 
 ## Run tests
 
-Run `npm test` for the complete Jest and Supertest suite, or `npm run test:coverage` to include coverage. Tests use an isolated in-memory MongoDB and do not connect to the development or production database. On the first run, `mongodb-memory-server` downloads a MongoDB binary, so an internet connection is required. If MongoDB is already installed locally, point the test helper at that executable for the run with `MONGOMS_SYSTEM_BINARY=/path/to/mongod npm test` (replace the example path with your local `mongod` path).
-
-## Seed accounts and authentication
-
-`npm run seed` creates these local test accounts. All four use password `Password123`.
-
-| Role | Email |
-| --- | --- |
-| Director | `director@example.com` |
-| Director | `director2@example.com` |
-| Member (chorister) | `member@example.com` |
-| Member (instrumentalist) | `member2@example.com` |
-
-Log in with `POST /auth/login` and copy the returned token. Send it on protected requests in the `Authorization` header as `Bearer <token>`.
-
-```bash
-curl -X POST http://localhost:3006/api/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"director@example.com","password":"Password123"}'
+```sh
+npm test
+npm run test:coverage
 ```
 
-Copy `token` from that response into a local shell variable, then attach it to protected requests:
+The tests use an isolated in-memory MongoDB and do not connect to the local or production database. On the first test run, `mongodb-memory-server` downloads a MongoDB binary and needs internet access. If MongoDB is installed already, use `MONGOMS_SYSTEM_BINARY=/path/to/mongod npm test` with your own executable path. No machine-specific path is stored in the repository.
 
-```bash
-TOKEN='<token returned by login>'
-curl http://localhost:3006/api/auth/me -H "Authorization: Bearer $TOKEN"
-```
+## API and project documents
 
-## API and test requests
-
-See the [built API spec](docs/data-model-and-api-spec.md) and [permissions table](docs/permissions-and-endpoints.md). The versioned [Postman Collection v2.1](docs/postman/music-ministry-hub.postman_collection.json) includes Auth, Songs, Assignments, and Submissions requests, including expected 401, 403, and 409 failures. Tokens belong in a local Postman environment; never commit them.
-
-All API errors use `{ "error": { "code": "...", "message": "..." } }`.
-
-## Week 2 feedback response
-
-No written mentor feedback has been received yet. Week 2 followed the Week 1 work plan: authentication with roles and ownership checks, assignments and submissions linked to songs and members, Zod request validation, duplicate protection, and 409 conflicts when a parent still has child records. Services and setlists are marked as planned for later.
-
-## Docs
-
-- `/docs/idea-one-pager.md`
-- `/docs/work-plan.md`
-- `/docs/data-model-and-api-spec.md`
-- `/docs/erd.dbml` and `erd.png`
-- `/docs/permissions-and-endpoints.md`
-- `/docs/postman/music-ministry-hub.postman_collection.json`
-
-[Issue log (Week 2)](docs/week-2/issue-log.md) - 9 entries, with what happened and how each was fixed.
+- [OpenAPI 3.1 specification](docs/openapi.yaml)
+- [Data model and endpoint table](docs/data-model-and-api-spec.md)
+- [Permissions and built endpoints](docs/permissions-and-endpoints.md)
+- [Postman collection](docs/postman/music-ministry-hub.postman_collection.json)
+- [Postman environment template](docs/postman/music-ministry-hub.template.postman_environment.json)
+- [Security notes and audit findings](docs/security-notes.md)
+- [Performance and indexes](docs/performance-notes.md)
+- [Render and Atlas deployment guide](docs/deployment-guide.md)
+- [Week 3 test coverage note](docs/week-3/test-coverage-note.md)
+- [Week 3 issue log draft](docs/week-3/issue-log.md)
+- [Week 3 technical reflection draft](docs/week-3/technical-reflection.md)
+- [Week 3 declaration draft](docs/week-3/declaration.md)
+- [Week 3 walkthrough script](docs/week-3/walkthrough-script.md)
+- [Week 3 weekly update draft](docs/week-3/weekly-update-note.md)
+- [Week 2 issue log](docs/week-2/issue-log.md)
+- [Archived Week 2 issue-log copy](<docs/week-2/issue-log copy.md>)
+- [Week 2 weekly update](docs/week-2/weekly-update-note.md)
+- [Week 1–3 work plan](docs/work-plan.md)
+- [Project one-pager](docs/idea-one-pager.md)
+- [ERD source](docs/erd.dbml) and [ERD image](docs/erd.png)
+- [Earlier weekly update](docs/weekly-update-note.md)

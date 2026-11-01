@@ -1,0 +1,632 @@
+openapi: 3.1.0
+info:
+  title: Music Ministry Hub API
+  version: 1.0.0
+  description: >-
+    API for ministry songs, assignments, member submissions, authentication,
+    and health checks. All paths are relative to /api.
+servers:
+  - url: https://YOUR-RENDER-SERVICE.onrender.com/api
+    description: Replace with the deployed service URL.
+  - url: http://localhost:3006/api
+    description: Local development.
+security:
+  - bearerAuth: []
+tags:
+  - name: Health
+  - name: Authentication
+  - name: Songs
+  - name: Assignments
+  - name: Submissions
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Check that the API process is responding
+      security: []
+      responses:
+        '200':
+          description: Healthy process.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+              example: { status: ok }
+  /auth/signup:
+    post:
+      tags: [Authentication]
+      summary: Create a member account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SignupInput' }
+            example:
+              fullName: New Member
+              email: new-member@example.com
+              password: Password123
+              memberType: chorister
+              part: alto
+      responses:
+        '201':
+          description: Account created; passwords are never returned.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Member' }
+              example: { _id: 507f1f77bcf86cd799439011, fullName: New Member, email: new-member@example.com, role: member, memberType: chorister, part: alto }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/DuplicateError' }
+        '429': { $ref: '#/components/responses/RateLimitError' }
+        '413': { $ref: '#/components/responses/PayloadTooLargeError' }
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Log in and receive a bearer token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginInput' }
+            example: { email: member@example.com, password: Password123 }
+      responses:
+        '200':
+          description: Authenticated member and JWT.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, member]
+                properties:
+                  token: { type: string, description: JWT bearer token }
+                  member: { $ref: '#/components/schemas/Member' }
+              example: { token: eyJ...REPLACE_WITH_TOKEN, member: { _id: 507f1f77bcf86cd799439011, fullName: New Member, email: member@example.com, role: member, memberType: chorister } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/InvalidCredentialsError' }
+        '429': { $ref: '#/components/responses/RateLimitError' }
+        '413': { $ref: '#/components/responses/PayloadTooLargeError' }
+  /auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get the authenticated member
+      responses:
+        '200':
+          description: Current member.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Member' }
+              example: { _id: 507f1f77bcf86cd799439011, fullName: Member One, email: member@example.com, role: member, memberType: chorister, part: alto }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+  /songs:
+    get:
+      tags: [Songs]
+      summary: List songs, sorted by title
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated songs.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedSongs' }
+              example:
+                data: [{ _id: 507f1f77bcf86cd799439011, title: Amazing Grace, musicalKey: G }]
+                page: 1
+                limit: 20
+                total: 1
+                totalPages: 1
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+    post:
+      tags: [Songs]
+      summary: Create a song (director only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SongInput' }
+            example: { title: Amazing Grace, musicalKey: G, composer: John Newton, tempoBpm: 72 }
+      responses:
+        '201':
+          description: Song created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Song' }
+              example: { _id: 507f1f77bcf86cd799439011, title: Amazing Grace, musicalKey: G }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '413': { $ref: '#/components/responses/PayloadTooLargeError' }
+  /songs/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Songs]
+      summary: Get one song
+      responses:
+        '200':
+          description: Song details.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Song' }
+              example: { _id: 507f1f77bcf86cd799439011, title: Amazing Grace, musicalKey: G }
+        '400': { $ref: '#/components/responses/InvalidIdError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+    put:
+      tags: [Songs]
+      summary: Replace editable song fields (director only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SongInput' }
+            example: { title: Amazing Grace, musicalKey: G }
+      responses:
+        '200':
+          description: Updated song.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Song' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '413': { $ref: '#/components/responses/PayloadTooLargeError' }
+    delete:
+      tags: [Songs]
+      summary: Delete a song (director only)
+      responses:
+        '200':
+          description: Song deleted.
+          content:
+            application/json:
+              example: { message: Song deleted }
+        '400': { $ref: '#/components/responses/InvalidIdError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+  /songs/{id}/assignments:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Songs]
+      summary: List assignments for a song
+      responses:
+        '200':
+          description: Assignment array.
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Assignment' } }
+        '400': { $ref: '#/components/responses/InvalidIdError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+  /assignments:
+    get:
+      tags: [Assignments]
+      summary: List assignments, newest first
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated assignments.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedAssignments' }
+              example: { data: [{ _id: 507f1f77bcf86cd799439011, title: Learn the alto part }], page: 1, limit: 20, total: 1, totalPages: 1 }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+    post:
+      tags: [Assignments]
+      summary: Create an assignment (director only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssignmentInput' }
+            example: { song: 507f1f77bcf86cd799439011, title: Learn the alto part, type: sight_singing, audience: choristers, instructions: Practice the first verse, deadline: '2099-12-31T18:00:00.000Z' }
+      responses:
+        '201':
+          description: Assignment created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Assignment' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '413': { $ref: '#/components/responses/PayloadTooLargeError' }
+  /assignments/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Assignments]
+      summary: Get one assignment
+      responses:
+        '200':
+          description: Assignment details.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Assignment' }
+        '400': { $ref: '#/components/responses/InvalidIdError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+    put:
+      tags: [Assignments]
+      summary: Update an assignment (creating director only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssignmentUpdateInput' }
+            example: { title: Practice the new arrangement }
+      responses:
+        '200':
+          description: Updated assignment.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Assignment' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '413': { $ref: '#/components/responses/PayloadTooLargeError' }
+    delete:
+      tags: [Assignments]
+      summary: Delete an assignment (creating director only)
+      responses:
+        '200':
+          description: Assignment deleted.
+          content:
+            application/json:
+              example: { message: Assignment deleted }
+        '400': { $ref: '#/components/responses/InvalidIdError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+  /assignments/{id}/submissions:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Submissions]
+      summary: List submissions for an assignment (director only)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated submissions with populated member summaries.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedSubmissions' }
+              example: { data: [{ _id: 507f1f77bcf86cd799439011, link: 'https://example.com/recording', isLate: false, member: { fullName: Member One, memberType: chorister } }], page: 1, limit: 20, total: 1, totalPages: 1 }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+    post:
+      tags: [Submissions]
+      summary: Submit work to an assignment (eligible member only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubmissionInput' }
+            example: { link: 'https://example.com/my-recording', note: First attempt }
+      responses:
+        '201':
+          description: Submission created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Submission' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '409': { $ref: '#/components/responses/ConflictError' }
+        '413': { $ref: '#/components/responses/PayloadTooLargeError' }
+  /submissions/mine:
+    get:
+      tags: [Submissions]
+      summary: List the current member's submissions
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated submissions with assignment summaries.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedSubmissions' }
+              example: { data: [{ _id: 507f1f77bcf86cd799439011, link: 'https://example.com/recording', isLate: false, assignment: { title: Practice, deadline: '2099-12-31T18:00:00.000Z' } }], page: 1, limit: 20, total: 1, totalPages: 1 }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+  /submissions/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Submissions]
+      summary: Get a submission (owner only)
+      responses:
+        '200':
+          description: Submission with assignment summary.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Submission' }
+        '400': { $ref: '#/components/responses/InvalidIdError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+    put:
+      tags: [Submissions]
+      summary: Edit a submission (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubmissionUpdateInput' }
+            example: { note: Updated practice recording }
+      responses:
+        '200':
+          description: Updated submission.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Submission' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+        '413': { $ref: '#/components/responses/PayloadTooLargeError' }
+    delete:
+      tags: [Submissions]
+      summary: Delete a submission (owner only)
+      responses:
+        '200':
+          description: Submission deleted.
+          content:
+            application/json:
+              example: { message: Submission deleted }
+        '400': { $ref: '#/components/responses/InvalidIdError' }
+        '401': { $ref: '#/components/responses/UnauthorizedError' }
+        '403': { $ref: '#/components/responses/ForbiddenError' }
+        '404': { $ref: '#/components/responses/NotFoundError' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      description: 24-character MongoDB ObjectId.
+      schema: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
+      example: 507f1f77bcf86cd799439011
+    Page:
+      name: page
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, default: 1 }
+      example: 2
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      example: 20
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+      example: { error: { code: VALIDATION_ERROR, message: 'email: Invalid input' } }
+    Member:
+      type: object
+      example: { _id: 507f1f77bcf86cd799439011, fullName: Member One, email: member@example.com, role: member, memberType: chorister, part: alto }
+      properties:
+        _id: { type: string }
+        fullName: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [member, director] }
+        memberType: { type: string, enum: [chorister, instrumentalist] }
+        part: { type: string }
+    SignupInput:
+      type: object
+      required: [fullName, email, password, memberType]
+      properties:
+        fullName: { type: string, minLength: 1, maxLength: 100 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8, maxLength: 72 }
+        memberType: { type: string, enum: [chorister, instrumentalist] }
+        part: { type: string, maxLength: 50 }
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, minLength: 1 }
+        password: { type: string, minLength: 1 }
+    Song:
+      type: object
+      example: { _id: 507f1f77bcf86cd799439011, title: Amazing Grace, composer: John Newton, musicalKey: G, tempoBpm: 72 }
+      properties:
+        _id: { type: string }
+        title: { type: string }
+        composer: { type: string }
+        musicalKey: { type: string, pattern: '^[A-G][#b]?m?$' }
+        tempoBpm: { type: integer, minimum: 30, maximum: 240 }
+        referenceLink: { type: string, format: uri }
+        notes: { type: string }
+    SongInput:
+      type: object
+      required: [title, musicalKey]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 120 }
+        composer: { type: string, maxLength: 100 }
+        musicalKey: { type: string, pattern: '^[A-G][#b]?m?$' }
+        tempoBpm: { type: integer, minimum: 30, maximum: 240 }
+        referenceLink: { type: string, format: uri }
+        notes: { type: string }
+    Assignment:
+      type: object
+      example: { _id: 507f1f77bcf86cd799439011, title: Learn the alto part, type: sight_singing, audience: choristers, instructions: Practice the first verse, deadline: '2099-12-31T18:00:00.000Z' }
+      properties:
+        _id: { type: string }
+        song: { oneOf: [{ type: string }, { type: object }] }
+        createdBy: { type: string }
+        title: { type: string }
+        type: { type: string, enum: [sight_singing, sight_reading, by_ear] }
+        audience: { type: string, enum: [choristers, instrumentalists, all] }
+        instructions: { type: string }
+        tutorialLink: { type: string, format: uri }
+        deadline: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    AssignmentInput:
+      type: object
+      required: [song, title, type, audience, instructions, deadline]
+      properties:
+        song: { type: string, pattern: '^[0-9a-fA-F]{24}$' }
+        title: { type: string, minLength: 1, maxLength: 120 }
+        type: { type: string, enum: [sight_singing, sight_reading, by_ear] }
+        audience: { type: string, enum: [choristers, instrumentalists, all] }
+        instructions: { type: string, minLength: 1, maxLength: 2000 }
+        tutorialLink: { type: string, format: uri }
+        deadline: { type: string, format: date-time }
+    AssignmentUpdateInput:
+      type: object
+      minProperties: 1
+      properties:
+        title: { type: string }
+        type: { type: string, enum: [sight_singing, sight_reading, by_ear] }
+        audience: { type: string, enum: [choristers, instrumentalists, all] }
+        instructions: { type: string }
+        tutorialLink: { type: string, format: uri }
+        deadline: { type: string, format: date-time }
+    Submission:
+      type: object
+      example: { _id: 507f1f77bcf86cd799439011, link: 'https://example.com/recording', note: First attempt, isLate: false }
+      properties:
+        _id: { type: string }
+        assignment: { oneOf: [{ type: string }, { type: object }] }
+        member: { oneOf: [{ type: string }, { type: object }] }
+        link: { type: string, format: uri }
+        note: { type: string }
+        isLate: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    SubmissionInput:
+      type: object
+      required: [link]
+      properties:
+        link: { type: string, format: uri }
+        note: { type: string, maxLength: 500 }
+    SubmissionUpdateInput:
+      type: object
+      minProperties: 1
+      properties:
+        link: { type: string, format: uri }
+        note: { type: string, maxLength: 500 }
+    PaginatedSongs:
+      allOf:
+        - $ref: '#/components/schemas/PageInfo'
+        - type: object
+          properties:
+            data: { type: array, items: { $ref: '#/components/schemas/Song' } }
+    PaginatedAssignments:
+      allOf:
+        - $ref: '#/components/schemas/PageInfo'
+        - type: object
+          properties:
+            data: { type: array, items: { $ref: '#/components/schemas/Assignment' } }
+    PaginatedSubmissions:
+      allOf:
+        - $ref: '#/components/schemas/PageInfo'
+        - type: object
+          properties:
+            data: { type: array, items: { $ref: '#/components/schemas/Submission' } }
+    PageInfo:
+      type: object
+      required: [data, page, limit, total, totalPages]
+      properties:
+        data: { type: array }
+        page: { type: integer, minimum: 1 }
+        limit: { type: integer, minimum: 1, maximum: 100 }
+        total: { type: integer, minimum: 0 }
+        totalPages: { type: integer, minimum: 0 }
+  responses:
+    ValidationError:
+      description: Invalid body or query parameters.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: VALIDATION_ERROR, message: 'email: Invalid input' } }
+    UnauthorizedError:
+      description: Missing, invalid, or expired bearer token, or invalid credentials.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: UNAUTHENTICATED, message: Please log in to continue } }
+    ForbiddenError:
+      description: Authenticated user lacks the required role or ownership.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: FORBIDDEN, message: You do not have permission to do this } }
+    NotFoundError:
+      description: Requested record does not exist.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: NOT_FOUND, message: Song not found } }
+    InvalidIdError:
+      description: Path ID is not a valid MongoDB ObjectId.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: INVALID_ID, message: Invalid song id } }
+    ConflictError:
+      description: Operation conflicts with an existing related record.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: CONFLICT, message: Cannot delete a song that still has assignments } }
+    DuplicateError:
+      description: A unique account or relationship already exists.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: DUPLICATE, message: A record with this email already exists } }
+    RateLimitError:
+      description: Too many login or signup attempts from this IP address.
+      content:
+        text/html:
+          schema: { type: string }
+          example: Too many requests, please try again later.
+    InvalidCredentialsError:
+      description: Email or password is incorrect.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: INVALID_CREDENTIALS, message: Invalid email or password } }
+    PayloadTooLargeError:
+      description: JSON body is larger than 100 KB.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: PAYLOAD_TOO_LARGE, message: Request body is too large } }
