@@ -7,6 +7,7 @@ const Song = require("../models/Song");
 const Submission = require("../models/Submission");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
 const { validate } = require("../middleware/validate");
+const isLate = require("../utils/isLate");
 const {
     assignmentCreateSchema,
     assignmentUpdateSchema,
@@ -78,7 +79,7 @@ router.post(
         member: req.member._id,
         link: req.body && req.body.link,
         note: req.body && req.body.note,
-        isLate: new Date() > assignment.deadline,
+        isLate: isLate(new Date(), assignment.deadline),
     });
     res.status(201).json(submission);
     },

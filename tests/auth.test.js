@@ -1,8 +1,8 @@
 const request = require("supertest");
 const app = require("../src/app");
-const { connectTestDB, clearDB, closeDB } = require("./helpers");
+const { connectTestDB, clearDB, closeDB, DB_STARTUP_TIMEOUT_MS } = require("./helpers");
 
-beforeAll(connectTestDB);
+beforeAll(connectTestDB, DB_STARTUP_TIMEOUT_MS);
 beforeEach(clearDB);
 afterAll(closeDB);
 

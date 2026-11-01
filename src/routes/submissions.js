@@ -6,6 +6,7 @@ const Submission = require("../models/Submission");
 const Assignment = require("../models/Assignment");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
 const { validate } = require("../middleware/validate");
+const isLate = require("../utils/isLate");
 const { submissionUpdateSchema } = require("../validators/schemas");
 
 const router = express.Router();
@@ -85,7 +86,7 @@ router.put(
     }
 
     submission.set(pickFields(req.body));
-    submission.isLate = new Date() > assignment.deadline;
+    submission.isLate = isLate(new Date(), assignment.deadline);
     await submission.save();
     res.status(200).json(submission);
     },
