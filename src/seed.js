@@ -75,6 +75,15 @@ const members = [
 ];
 
 async function seed() {
+    if (
+        process.env.NODE_ENV === "production" &&
+        process.env.CONFIRM_DESTRUCTIVE_SEED !== "YES"
+    ) {
+        throw new Error(
+            "Refusing to seed production: this script deletes existing songs, members, assignments and submissions. Set CONFIRM_DESTRUCTIVE_SEED=YES only for an empty database.",
+        );
+    }
+
     await connectDB();
 
     await Submission.deleteMany({});
@@ -123,4 +132,8 @@ async function seed() {
     await mongoose.disconnect();
 }
 
-seed();
+seed().catch(async (error) => {
+    console.error(error.message);
+    await mongoose.disconnect();
+    process.exitCode = 1;
+});
