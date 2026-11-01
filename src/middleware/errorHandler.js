@@ -38,6 +38,12 @@ const errorHandler = function (err, req, res, next) {
         });
     }
 
+    if (err.type === "entity.too.large") {
+        return res.status(413).json({
+            error: { code: "PAYLOAD_TOO_LARGE", message: "Request body is too large" },
+        });
+    }
+
     if (err.code === 11000) {
         const field = Object.keys(err.keyPattern || {}).join(", ");
         return res.status(409).json({

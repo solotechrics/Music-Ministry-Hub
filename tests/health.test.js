@@ -7,6 +7,21 @@ describe("API basics (no database needed)", () => {
         const res = await request(app).get("/api/health");
         expect(res.status).toBe(200);
         expect(res.body).toEqual({ status: "ok" });
+        expect(res.headers["x-content-type-options"]).toBe("nosniff");
+    });
+
+    it("allows only the configured default browser origin", async () => {
+        const allowed = await request(app)
+            .options("/api/health")
+            .set("Origin", "http://localhost:3000")
+            .set("Access-Control-Request-Method", "GET");
+        expect(allowed.headers["access-control-allow-origin"]).toBe("http://localhost:3000");
+
+        const denied = await request(app)
+            .options("/api/health")
+            .set("Origin", "https://untrusted.example")
+            .set("Access-Control-Request-Method", "GET");
+        expect(denied.headers["access-control-allow-origin"]).toBeUndefined();
     });
 
     it("GET /api/songs returns 401 with no token", async () => {

@@ -74,6 +74,14 @@ describe("POST /api/auth/login", () => {
         expect(res.status).toBe(401);
     });
 
+    it("rejects an object selector in a NoSQL injection style login body", async () => {
+        const res = await request(app)
+            .post("/api/auth/login")
+            .send({ email: { $ne: null }, password: { $ne: null } });
+        expect(res.status).toBe(400);
+        expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    });
+
     it("returns 400 when the password is missing", async () => {
         const res = await request(app)
             .post("/api/auth/login")

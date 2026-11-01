@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const Member = require("../models/Member");
 const { authenticate } = require("../middleware/authMiddleware");
 const { validate } = require("../middleware/validate");
+const { createAuthRateLimiter } = require("../middleware/authRateLimit");
 const { signupSchema, loginSchema } = require("../validators/schemas");
 const router = express.Router();
 
@@ -38,14 +39,16 @@ const invalidCredentials = function (res) {
     });
 };
 
-// My signup route
-router.post("/signup", validate(signupSchema), async (req, res) => {
+const signupRateLimit = createAuthRateLimiter();
+const loginRateLimit = createAuthRateLimiter();
+
+router.post("/signup", signupRateLimit, validate(signupSchema), async (req, res) => {
     const member = await Member.create(pickFields(req.body));
     res.status(201).json(member);
 });
 
 // My login route
-router.post("/login", validate(loginSchema), async (req, res) => {
+router.post("/login", loginRateLimit, validate(loginSchema), async (req, res) => {
     const { email, password } = req.body || {};
     if (
         !email ||
