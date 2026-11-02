@@ -1,29 +1,24 @@
-# Week 3 update — DRAFT
+Week 3 - Oluwasegun Opeyemi Solomon - Backend - Music Ministry Hub
 
-**Name:** [CONFIRM YOUR NAME]  
-**Track:** Backend Development  
-**Project:** Music Ministry Hub
+Delivered:
+- Automated tests: Jest and Supertest suites that use an isolated in-memory MongoDB, plus a coverage command and report.
+- Security basics: Helmet headers, configured CORS, rate limits on login and sign-up, a 100 KB JSON limit, Zod validation on request input, and a startup check for JWT_SECRET.
+- Pagination on songs, assignments, my submissions and assignment submissions, with matching API and Postman examples.
+- API documentation (OpenAPI), a local setup guide, security and performance notes, and a deployment guide for Render and MongoDB Atlas.
 
-## Delivered
+Verification (as reported by the test run on 2026-11-01):
+- npm test: 7 suites, 43 tests passed.
+- npm run test:coverage: 82.35% statements, 67.83% branches, 87.50% functions, 84.26% lines.
+- OpenAPI file: parsed with 12 paths and 21 operations.
+- npm audit: 21 findings on 2026-11-01 (3 low, 17 moderate, 1 high). The high one is in body-parser, a production dependency, and has a compatible patch. 20 of the findings are in development tools only.
 
-- Database-backed Jest/Supertest suites using an isolated in-memory MongoDB, plus a coverage command and report.
-- Security basics: Helmet headers, configured CORS, login/signup rate limits, a 100 KB JSON limit, Zod-bound request validation, and startup checks for `JWT_SECRET`.
-- Pagination on songs, assignments, my submissions, and assignment submissions, with matching API and Postman examples.
-- Render/Atlas deployment instructions, OpenAPI specification, local setup guide, and draft reflection/declaration/video materials.
+Links:
+- Repository: https://github.com/solotechrics/Music-Ministry-Hub
+- Tag: week-3 (the code at commit cfa90ae; the live deployment, video and final documents were completed after the tag)
+- Live API URL: [ADD AFTER DEPLOYMENT]
+- Video walkthrough: [ADD AFTER RECORDING]
+- Drive folder: [ADD LINK]
 
-## Verification
+Blockers / risks: [WRITE WHAT REALLY SLOWED YOU DOWN, FOR EXAMPLE LOCAL MONGODB NOT STARTING AND ATLAS SETUP]. The rate limiter uses process memory. Services and setlists are not built.
 
-- `npm test`: **7 suites, 43 tests passed**; rerun in the final clone after installing dependencies and copying `.env.example` to `.env`.
-- `npm run test:coverage`: **7 suites, 43 tests passed**; 82.35% statements, 67.83% branches, 87.50% functions, and 84.26% lines.
-- OpenAPI YAML parse: passed with 12 paths, 21 operations, and all local references resolving.
-- `npm audit`: 21 findings were reported on 2026-11-01 (3 low, 17 moderate, 1 high); re-run before submission in case registry advisories changed.
-
-## Links to complete
-
-- Live API URL: **[ADD AFTER DEPLOYMENT]**
-- Video walkthrough: **[ADD AFTER RECORDING]**
-- Repository/commit link: **[ADD AFTER PUSHING, IF REQUIRED]**
-
-## Still to do
-
-Create Atlas and Render resources, set private environment values, deploy, seed only an empty database, verify the deployed API, record the walkthrough, and review the declaration/reflection so all personal claims are accurate.
+AI and sources used: Claude (planning, reviews, documents and parts of the code) and OpenAI Codex (implementing and testing later parts of the project from my prompts). Full details are in the declaration (docs/week-3/declaration.md).
